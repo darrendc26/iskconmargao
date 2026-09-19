@@ -1,0 +1,2 @@
+ALTER TABLE programs
+    ADD COLUMN IF NOT EXISTS invitation_media_id UUID REFERENCES media(id) ON DELETE SET NULL;

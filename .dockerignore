@@ -1,0 +1,17 @@
+.git
+.github
+node_modules
+**/.next
+**/out
+**/.env
+**/.env.*
+!.env.example
+postgres-data
+backups
+*.md
+coverage
+**/*.tsbuildinfo
+backend/bin
+backend/tmp
+apps/web/node_modules
+apps/admin/node_modules

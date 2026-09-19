@@ -1,0 +1,19 @@
+{
+  "name": "iskcon-margao",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w web",
+    "dev:admin": "npm run dev -w admin",
+    "lint": "npm run lint -w web && npm run lint -w admin",
+    "typecheck": "npm run typecheck -w web && npm run typecheck -w admin",
+    "build": "npm run build -w web && npm run build -w admin",
+    "test": "npm run test -w web --if-present && npm run test -w admin --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,17 @@
+export const CENTRE = {
+  name: "ISKCON Margao",
+  line1: "Matchless Gifts",
+  line2: "Next to Borkar Hospital",
+  city: "Margao, Goa 403601",
+  phoneDisplay: "+91 99230 30936",
+  phoneTel: "+919923030936",
+  weekly: "Friday & Saturday · Weekly Programs",
+  rhythm: "Kirtan · Krishna Katha · Prasadam · Community",
+  iskconGoa: "https://www.iskcongoa.com/",
+  iskconGoaLocations: "https://www.iskcongoa.com/locations/",
+  iskconWhat: "https://iskcon.org/what-is-iskcon/",
+  iskconHistory: "https://iskcon.org/history/",
+  gbcWhat: "https://gbc.iskcon.org/what-is-iskcon/",
+  vedabase: "https://vedabase.io/en/library/",
+  prabhupadaBooks: "https://vedabase.io/en/library/",
+} as const;
