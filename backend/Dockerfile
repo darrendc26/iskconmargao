@@ -1,11 +1,10 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.24-alpine AS build
 WORKDIR /src
+ENV GOTOOLCHAIN=auto
 RUN apk add --no-cache git ca-certificates
-COPY backend/go.mod* backend/go.sum* ./
-COPY go.mod* go.sum* ./
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ ./
-COPY . ./
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/server ./cmd/server
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bootstrap ./cmd/bootstrap
 
