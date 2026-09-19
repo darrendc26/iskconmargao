@@ -71,8 +71,16 @@ func Load() Config {
 	_ = godotenv.Load()
 	_ = godotenv.Load("../.env")
 	_ = os.Setenv("TZ", "Asia/Kolkata")
+	httpAddr := env("HTTP_ADDR", "")
+	if httpAddr == "" {
+		if port := os.Getenv("PORT"); port != "" {
+			httpAddr = ":" + port
+		} else {
+			httpAddr = ":8080"
+		}
+	}
 	c := Config{
-		HTTPAddr:            env("HTTP_ADDR", ":8080"),
+		HTTPAddr:            httpAddr,
 		DatabaseURL:         env("DATABASE_URL", "postgres://iskcon:changeme@localhost:5432/iskconmargao?sslmode=disable"),
 		SiteURL:             strings.TrimRight(env("SITE_URL", "http://localhost:3000"), "/"),
 		AdminURL:            strings.TrimRight(env("ADMIN_URL", "http://localhost:3001"), "/"),
