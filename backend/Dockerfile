@@ -14,7 +14,7 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=build /out/server /app/server
 COPY --from=build /out/bootstrap /app/bootstrap
-COPY migrations /app/migrations
+COPY --from=build /src/migrations /app/migrations
 ENV TZ=Asia/Kolkata
 EXPOSE 8080
 USER nobody
