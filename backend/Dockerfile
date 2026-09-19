@@ -1,9 +1,11 @@
 FROM golang:1.23-alpine AS build
 WORKDIR /src
 RUN apk add --no-cache git ca-certificates
-COPY go.mod go.sum ./
+COPY backend/go.mod* backend/go.sum* ./
+COPY go.mod* go.sum* ./
 RUN go mod download
-COPY . .
+COPY backend/ ./
+COPY . ./
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/server ./cmd/server
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/bootstrap ./cmd/bootstrap
 
