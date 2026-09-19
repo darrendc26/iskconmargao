@@ -8,7 +8,6 @@ RUN npm ci --workspace=admin --include-workspace-root || npm install --workspace
 FROM node:20-alpine AS build
 WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/admin/node_modules ./apps/admin/node_modules
 COPY package.json ./
 COPY apps/admin ./apps/admin
 COPY packages ./packages

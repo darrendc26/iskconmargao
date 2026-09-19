@@ -8,7 +8,6 @@ RUN npm ci --workspace=web --include-workspace-root || npm install --workspace=w
 FROM node:20-alpine AS build
 WORKDIR /repo
 COPY --from=deps /repo/node_modules ./node_modules
-COPY --from=deps /repo/apps/web/node_modules ./apps/web/node_modules
 COPY package.json ./
 COPY apps/web ./apps/web
 COPY packages ./packages
