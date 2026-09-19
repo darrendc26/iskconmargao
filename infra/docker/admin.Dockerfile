@@ -29,4 +29,4 @@ COPY --from=build /repo/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=build /repo/apps/admin/public ./apps/admin/public
 EXPOSE 3001
 USER node
-CMD ["node", "apps/admin/server.js"]
+CMD ["node", "server.js"]
