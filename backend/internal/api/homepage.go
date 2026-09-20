@@ -39,7 +39,7 @@ func (s *Server) loadSettings(c *gin.Context) models.SiteSettings {
 		st.InstagramURL = "https://www.instagram.com/iskconmargao_goa/"
 	}
 	if st.YouTubeURL == "" {
-		st.YouTubeURL = "https://www.youtube.com/@ISKCONMargao"
+		st.YouTubeURL = "https://www.youtube.com/@ISKCONGoaMargao"
 	}
 	if st.FacebookURL == "" {
 		st.FacebookURL = "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/"
