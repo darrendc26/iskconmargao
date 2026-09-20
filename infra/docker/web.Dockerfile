@@ -7,7 +7,7 @@ RUN npm ci --workspace=web --include-workspace-root || npm install --workspace=w
 
 FROM node:20-alpine AS build
 WORKDIR /repo
-COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=deps /repo ./
 COPY package.json ./
 COPY apps/web ./apps/web
 COPY packages ./packages
@@ -28,4 +28,4 @@ COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /repo/apps/web/public ./apps/web/public
 EXPOSE 3000
 USER node
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]

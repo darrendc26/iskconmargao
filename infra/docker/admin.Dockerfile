@@ -7,7 +7,7 @@ RUN npm ci --workspace=admin --include-workspace-root || npm install --workspace
 
 FROM node:20-alpine AS build
 WORKDIR /repo
-COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=deps /repo ./
 COPY package.json ./
 COPY apps/admin ./apps/admin
 COPY packages ./packages
@@ -29,4 +29,5 @@ COPY --from=build /repo/apps/admin/.next/static ./apps/admin/.next/static
 COPY --from=build /repo/apps/admin/public ./apps/admin/public
 EXPOSE 3001
 USER node
-CMD ["node", "server.js"]
+CMD ["node", "apps/admin/server.js"]
+
