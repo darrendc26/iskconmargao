@@ -38,18 +38,19 @@ func Run(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) error {
 }
 
 func adminUser(ctx context.Context, pool *pgxpool.Pool, cfg config.Config) error {
-	var n int
-	if err := pool.QueryRow(ctx, `SELECT COUNT(*) FROM users`).Scan(&n); err != nil {
-		return err
-	}
-	if n > 0 {
-		return nil
-	}
 	hash, err := password.Hash(cfg.BootstrapPassword)
 	if err != nil {
 		return err
 	}
-	_, err = pool.Exec(ctx, `INSERT INTO users (email, name, password_hash, role) VALUES ($1,$2,$3,'admin')`,
+	_, err = pool.Exec(ctx, `INSERT INTO users (email, name, password_hash, role, active, failed_logins, locked_until)
+		VALUES ($1, $2, $3, 'admin', true, 0, NULL)
+		ON CONFLICT (email) DO UPDATE SET
+			password_hash = EXCLUDED.password_hash,
+			name = EXCLUDED.name,
+			role = 'admin',
+			active = true,
+			failed_logins = 0,
+			locked_until = NULL`,
 		cfg.BootstrapEmail, cfg.BootstrapName, hash)
 	return err
 }
