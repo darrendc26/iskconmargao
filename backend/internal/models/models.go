@@ -127,6 +127,7 @@ type SiteSettings struct {
 	InstagramURL string `json:"instagram_url"`
 	FacebookURL  string `json:"facebook_url"`
 	YouTubeURL   string `json:"youtube_url"`
+	TwitterURL   string `json:"twitter_url"`
 	ISKCONGoaURL string `json:"iskcon_goa_url"`
 
 	HeroHeadline string `json:"hero_headline"`
@@ -158,6 +159,10 @@ func DefaultSettings() SiteSettings {
 
 		ISKCONGoaURL: "https://iskcongoa.com",
 		MapsURL:      "https://maps.google.com/?q=ISKCON+Margao+Matchless+Gifts",
+		InstagramURL: "https://www.instagram.com/iskconmargao_goa/",
+		YouTubeURL:   "https://www.youtube.com/@ISKCONMargao",
+		FacebookURL:  "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/",
+		TwitterURL:   "https://x.com/ISKCON_Margao_",
 	}
 }
 

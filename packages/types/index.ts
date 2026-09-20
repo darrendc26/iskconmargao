@@ -102,6 +102,7 @@ export type SiteSettings = {
   instagram_url: string;
   facebook_url: string;
   youtube_url: string;
+  twitter_url: string;
   iskcon_goa_url: string;
   hero_headline: string;
   hero_subhead: string;
