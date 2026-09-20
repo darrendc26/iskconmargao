@@ -23,6 +23,8 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 RUN mkdir -p apps/web/.next/cache && chown -R node:node /app
 COPY --chown=node:node --from=build /repo/apps/web/.next/standalone ./
 COPY --chown=node:node --from=build /repo/apps/web/.next/static ./apps/web/.next/static
