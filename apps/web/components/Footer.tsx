@@ -51,7 +51,7 @@ export async function Footer() {
         </svg>
       ),
     },
-  ].filter((item): item is { label: string; href: string; icon: React.ReactNode } => Boolean(item.href));
+  ].filter((item): item is { label: string; href: string; icon: React.ReactElement } => Boolean(item.href));
 
   return (
     <footer className="bg-[#163428] text-cream">
