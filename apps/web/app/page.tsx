@@ -7,7 +7,7 @@ import { CENTRE } from "@/lib/site";
 import { Photo, photos } from "@/components/Photo";
 import type { Metadata } from "next";
 
-export const revalidate = 60;
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "ISKCON Margao | A centre of ISKCON Goa in South Goa",
@@ -112,7 +112,7 @@ export default async function HomePage() {
               >
                 <div className="relative h-44 sm:h-48">
                   <Photo
-                    src={i % 2 === 0 ? photos.kirtan : photos.community}
+                    src={item.invitation_url || (i % 2 === 0 ? photos.kirtan : photos.community)}
                     alt=""
                     className="w-full h-full object-cover"
                   />

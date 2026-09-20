@@ -31,6 +31,7 @@ export type ThisWeekItem = {
   badge: string;
   when: string;
   blurb: string;
+  invitation_url?: string | null;
 };
 
 export function pickThisWeek(programs: Program[], limit = 3): ThisWeekItem[] {
@@ -44,6 +45,7 @@ export function pickThisWeek(programs: Program[], limit = 3): ThisWeekItem[] {
       badge: dayBadge(p),
       when: `${formatProgramWhen(p)} · ${onwards(p.start_time)}`,
       blurb: p.description,
+      invitation_url: p.invitation_url,
     });
   }
   return items;
