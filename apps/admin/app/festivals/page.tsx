@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { Shell } from "@/components/Shell";
 import { api } from "@/lib/api";
+import { uploadFile } from "@/components/SimpleList";
 
 export default function Page() {
   const [items, setItems] = useState<any[]>([]);
@@ -38,18 +39,9 @@ export default function Page() {
     setUploadingCover(true);
     setMsg("Uploading cover photo...");
 
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("folder", "festivals");
-
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/v1/admin/media/upload`, {
-        method: "POST",
-        body: fd,
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.data?.id) {
+      const data = await uploadFile(file, "festivals");
+      if (data.success && data.data?.id) {
         setCoverMediaId(data.data.id);
         setCoverPreviewUrl(data.data.url);
         setMsg("Cover photo uploaded!");
