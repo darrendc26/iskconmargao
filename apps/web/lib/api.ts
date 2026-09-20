@@ -21,7 +21,7 @@ export async function apiGet<T>(path: string, revalidate?: number): Promise<T | 
 export const getHomepage = () => apiGet<Homepage>("/api/v1/homepage", 10);
 export const getSettings = () => apiGet<SiteSettings>("/api/v1/settings/public", 10);
 export const getPrograms = () => apiGet<Program[]>("/api/v1/programs", 10);
-export const getFestivals = () => apiGet<{ upcoming: Festival[]; past: Festival[] }>("/api/v1/festivals", 10);
+export const getFestivals = () => apiGet<{ upcoming: Festival[]; past: Festival[] }>("/api/v1/festivals", 0);
 export const getFestival = (slug: string) => apiGet<Festival>(`/api/v1/festivals/${slug}`, 10);
 export const getArticles = () => apiGet<Article[]>("/api/v1/articles", 10);
 export const getArticle = (slug: string) => apiGet<Article>(`/api/v1/articles/${slug}`, 10);

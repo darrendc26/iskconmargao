@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Photo, photos } from "@/components/Photo";
 
-export const revalidate = 60;
+export const revalidate = 0;
 export const metadata: Metadata = {
   title: "Festivals",
   description: "Upcoming and past festivals at ISKCON Margao, South Goa.",

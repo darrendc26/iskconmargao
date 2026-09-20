@@ -15,7 +15,7 @@ func (s *Server) queryPrograms(c *gin.Context, activeOnly bool) []models.Program
 		FROM programs p
 		LEFT JOIN media m ON m.id = p.invitation_media_id`
 	if activeOnly {
-		q += ` WHERE p.active=true`
+		q += ` WHERE p.active=true AND (p.occurs_on IS NULL OR p.occurs_on >= CURRENT_DATE)`
 	}
 	q += ` ORDER BY p.occurs_on NULLS LAST, p.sort_order, p.day_of_week NULLS LAST`
 	rows, err := s.db.Query(c.Request.Context(), q)
