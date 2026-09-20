@@ -24,9 +24,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3001
-COPY --from=build /repo/apps/admin/.next/standalone ./
-COPY --from=build /repo/apps/admin/.next/static ./apps/admin/.next/static
-COPY --from=build /repo/apps/admin/public ./apps/admin/public
+RUN mkdir -p apps/admin/.next/cache && chown -R node:node /app
+COPY --chown=node:node --from=build /repo/apps/admin/.next/standalone ./
+COPY --chown=node:node --from=build /repo/apps/admin/.next/static ./apps/admin/.next/static
+COPY --chown=node:node --from=build /repo/apps/admin/public ./apps/admin/public
 EXPOSE 3001
 USER node
 CMD ["node", "apps/admin/server.js"]
