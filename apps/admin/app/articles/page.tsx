@@ -67,11 +67,10 @@ export default function Page() {
       const data = await uploadFile(file, "articles");
       if (data.success && data.data?.url) {
         const url = data.data.url;
-        const altText = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-        const markdown = `\n\n![${altText}](${url})\n\n`;
+        const markdown = `\n\n![](${url})\n\n`;
 
         insertAtCursor(markdown);
-        setUploadedImages((prev) => [{ id: data.data.id, url, alt: altText }, ...prev]);
+        setUploadedImages((prev) => [{ id: data.data.id, url, alt: "" }, ...prev]);
         setMsg("Picture uploaded and inserted into article!");
       } else {
         setMsg(data.error?.message || "Failed to upload picture.");
@@ -416,8 +415,7 @@ export default function Page() {
                 if (mdImg) {
                   return (
                     <figure key={idx} className="my-6 overflow-hidden rounded-xl border border-gold/20 shadow bg-white">
-                      <img src={mdImg[2]} alt={mdImg[1]} className="w-full max-h-96 object-cover" />
-                      {mdImg[1] && <figcaption className="p-2 text-center text-xs italic text-ink/70 bg-cream/50">{mdImg[1]}</figcaption>}
+                      <img src={mdImg[2]} alt="" className="w-full max-h-96 object-cover" />
                     </figure>
                   );
                 }

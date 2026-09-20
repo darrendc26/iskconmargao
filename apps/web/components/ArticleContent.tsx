@@ -36,12 +36,10 @@ export function ArticleContent({ content }: ArticleContentProps) {
 
     if (mdImgMatch) {
       flushParagraph(`img-${idx}`);
-      const alt = mdImgMatch[1];
       const src = mdImgMatch[2];
       elements.push(
         <figure key={`img-${idx}`} className="my-8 overflow-hidden rounded-2xl border border-gold/25 shadow-md bg-white/60">
-          <img src={src} alt={alt || "Article image"} className="w-full max-h-[550px] object-cover" />
-          {alt && <figcaption className="p-3 text-center text-xs md:text-sm italic text-ink-muted border-t border-gold/10 bg-gold/5">{alt}</figcaption>}
+          <img src={src} alt="" className="w-full max-h-[550px] object-cover" />
         </figure>
       );
       return;
