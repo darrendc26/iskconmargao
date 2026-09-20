@@ -35,6 +35,18 @@ func (s *Server) loadSettings(c *gin.Context) models.SiteSettings {
 	if st.MapsURL == "" || (strings.Contains(st.MapsURL, "ISKCON+Margao+Goa") && !strings.Contains(st.MapsURL, "Matchless")) {
 		st.MapsURL = canonicalMaps
 	}
+	if st.InstagramURL == "" {
+		st.InstagramURL = "https://www.instagram.com/iskconmargao_goa/"
+	}
+	if st.YouTubeURL == "" {
+		st.YouTubeURL = "https://www.youtube.com/@ISKCONMargao"
+	}
+	if st.FacebookURL == "" {
+		st.FacebookURL = "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/"
+	}
+	if st.TwitterURL == "" {
+		st.TwitterURL = "https://x.com/ISKCON_Margao_"
+	}
 	return st
 }
 

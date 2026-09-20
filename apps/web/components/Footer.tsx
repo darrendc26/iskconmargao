@@ -9,10 +9,10 @@ export async function Footer() {
   const maps = mapsHref(s?.maps_url);
   const wa = s?.whatsapp_channel_url || s?.whatsapp_contact_url;
 
-  const instagram = s?.instagram_url;
-  const youtube = s?.youtube_url;
-  const facebook = s?.facebook_url;
-  const twitter = s?.twitter_url;
+  const instagram = s?.instagram_url || "https://www.instagram.com/iskconmargao_goa/";
+  const youtube = s?.youtube_url || "https://www.youtube.com/@ISKCONMargao";
+  const facebook = s?.facebook_url || "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/";
+  const twitter = s?.twitter_url || "https://x.com/ISKCON_Margao_";
 
   const socialIcons = [
     {
