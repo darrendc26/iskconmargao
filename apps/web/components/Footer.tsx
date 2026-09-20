@@ -10,7 +10,7 @@ export async function Footer() {
   const wa = s?.whatsapp_channel_url || s?.whatsapp_contact_url;
 
   const instagram = s?.instagram_url || "https://www.instagram.com/iskconmargao_goa/";
-  const youtube = s?.youtube_url || "https://www.youtube.com/@ISKCONMargao";
+  const youtube = s?.youtube_url || "https://www.youtube.com/@ISKCONGoaMargao";
   const facebook = s?.facebook_url || "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/";
   const twitter = s?.twitter_url || "https://x.com/ISKCON_Margao_";
 
