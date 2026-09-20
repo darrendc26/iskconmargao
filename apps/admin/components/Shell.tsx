@@ -5,7 +5,16 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
-const nav = [
+type User = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+};
+
+type NavItem = { href?: string; label?: string; group?: string; adminOnly?: boolean };
+
+const nav: NavItem[] = [
   { href: "/", label: "Dashboard" },
   { group: "Content" },
   { href: "/articles", label: "Articles" },
@@ -19,26 +28,38 @@ const nav = [
   { href: "/volunteers", label: "Volunteers" },
   { href: "/subscribers", label: "Subscribers" },
   { href: "/contacts", label: "Contact Messages" },
-  { group: "Donations" },
-  { href: "/donations", label: "Donations" },
+  { group: "Donations", adminOnly: true },
+  { href: "/donations", label: "Donations", adminOnly: true },
   { href: "/donation-purposes", label: "Donation Purposes" },
-  { group: "Website" },
-  { href: "/settings", label: "Settings" },
-  { group: "System" },
-  { href: "/users", label: "Users" },
-  { href: "/audit", label: "Audit Logs" },
+  { group: "Website", adminOnly: true },
+  { href: "/settings", label: "Settings", adminOnly: true },
+  { group: "System", adminOnly: true },
+  { href: "/users", label: "Users & Team", adminOnly: true },
+  { href: "/audit", label: "Audit Logs", adminOnly: true },
 ];
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    api("/api/v1/admin/me").then((r) => {
-      if (r.status === 401) router.push("/login");
+    api<{ user: User }>("/api/v1/admin/me").then((r) => {
+      if (r.status === 401) {
+        router.push("/login");
+      } else if (r.ok && r.data?.user) {
+        setCurrentUser(r.data.user);
+      }
     });
   }, [router]);
+
+  const isAdmin = currentUser?.role === "admin";
+
+  const visibleNav = nav.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr] bg-cream/30">
@@ -61,41 +82,61 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <aside
         className={`${
           mobileMenuOpen ? "block" : "hidden"
-        } md:block bg-forest text-cream p-6 border-b md:border-b-0 md:border-r border-gold/20`}
+        } md:block bg-forest text-cream p-6 border-b md:border-b-0 md:border-r border-gold/20 flex flex-col justify-between`}
       >
-        <div className="hidden md:block">
-          <p className="font-serif text-2xl">ISKCON Margao</p>
-          <p className="text-xs text-gold mt-1">Content studio</p>
-        </div>
-        <nav className="mt-4 md:mt-8 space-y-1 text-sm">
-          {nav.map((item, i) =>
-            "group" in item ? (
-              <p key={i} className="pt-4 pb-1 text-[10px] uppercase tracking-widest text-gold/80 font-bold">
-                {item.group}
-              </p>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href!}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
-                  path === item.href ? "bg-cream/20 text-white font-medium" : "hover:bg-cream/10 text-cream/90"
-                }`}
-              >
-                {item.label}
-              </Link>
-            )
+        <div>
+          <div className="hidden md:block">
+            <p className="font-serif text-2xl">ISKCON Margao</p>
+            <p className="text-xs text-gold mt-1">Content studio</p>
+          </div>
+
+          {currentUser && (
+            <div className="mt-4 p-2.5 bg-cream/10 rounded-xl border border-gold/20 flex items-center justify-between">
+              <div className="truncate pr-2">
+                <p className="text-xs font-semibold text-white truncate">{currentUser.name || currentUser.email}</p>
+                <p className="text-[10px] text-cream/70 truncate">{currentUser.email}</p>
+              </div>
+              <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                currentUser.role === "admin" ? "bg-gold text-forest" : "bg-cream/20 text-cream"
+              }`}>
+                {currentUser.role}
+              </span>
+            </div>
           )}
-        </nav>
-        <button
-          className="mt-8 text-xs underline text-gold hover:text-white"
-          onClick={async () => {
-            await api("/api/v1/admin/auth/logout", { method: "POST" });
-            router.push("/login");
-          }}
-        >
-          Sign out
-        </button>
+
+          <nav className="mt-4 md:mt-6 space-y-1 text-sm">
+            {visibleNav.map((item, i) =>
+              "group" in item && item.group ? (
+                <p key={i} className="pt-4 pb-1 text-[10px] uppercase tracking-widest text-gold/80 font-bold">
+                  {item.group}
+                </p>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href!}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block rounded-lg px-3 py-2 text-sm transition-colors ${
+                    path === item.href ? "bg-cream/20 text-white font-medium" : "hover:bg-cream/10 text-cream/90"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              )
+            )}
+          </nav>
+        </div>
+
+        <div className="pt-6 mt-6 border-t border-gold/20">
+          <button
+            className="text-xs underline text-gold hover:text-white"
+            onClick={async () => {
+              await api("/api/v1/admin/auth/logout", { method: "POST" });
+              router.push("/login");
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Viewport */}
