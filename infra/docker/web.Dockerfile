@@ -2,7 +2,7 @@ FROM node:20-alpine AS deps
 WORKDIR /repo
 COPY package.json package-lock.json* ./
 COPY apps/web/package.json apps/web/
-COPY packages/types/package.json packages/types/
+COPY packages/types packages/types
 RUN npm ci --workspace=web --include-workspace-root || npm install --workspace=web --include-workspace-root
 
 FROM node:20-alpine AS build

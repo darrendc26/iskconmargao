@@ -1,5 +1,13 @@
 {
   "name": "@iskcon/types",
   "private": true,
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./index.ts"
+    }
+  }
 }
