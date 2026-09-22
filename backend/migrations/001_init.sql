@@ -3,11 +3,11 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS citext;
 
-CREATE TYPE user_role AS ENUM ('admin', 'editor', 'contributor');
-CREATE TYPE article_status AS ENUM ('draft', 'pending_review', 'published', 'archived');
-CREATE TYPE donation_status AS ENUM ('pending', 'success', 'failed', 'refunded');
-CREATE TYPE volunteer_status AS ENUM ('new', 'contacted', 'active', 'archived');
-CREATE TYPE contact_status AS ENUM ('new', 'read', 'replied', 'archived');
+DO $$ BEGIN CREATE TYPE user_role AS ENUM ('admin', 'editor', 'contributor'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE article_status AS ENUM ('draft', 'pending_review', 'published', 'archived'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE donation_status AS ENUM ('pending', 'success', 'failed', 'refunded'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE volunteer_status AS ENUM ('new', 'contacted', 'active', 'archived'); EXCEPTION WHEN duplicate_object THEN null; END $$;
+DO $$ BEGIN CREATE TYPE contact_status AS ENUM ('new', 'read', 'replied', 'archived'); EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -328,3 +328,10 @@ CREATE TABLE login_attempts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX login_attempts_email_idx ON login_attempts(email, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    filename TEXT PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+INSERT INTO schema_migrations (filename) VALUES ('001_init.sql') ON CONFLICT DO NOTHING;

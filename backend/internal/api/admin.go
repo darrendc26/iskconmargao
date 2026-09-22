@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/iskcongoa/margao/internal/blocks"
 	"github.com/iskcongoa/margao/internal/httpx"
 	"github.com/iskcongoa/margao/internal/models"
 	"github.com/iskcongoa/margao/internal/password"
@@ -220,17 +221,17 @@ func (s *Server) adminDeleteFestival(c *gin.Context) {
 }
 
 type articleIn struct {
-	Title             string  `json:"title"`
-	Slug              string  `json:"slug"`
-	Excerpt           string  `json:"excerpt"`
-	Content           string  `json:"content"`
-	CoverMediaID      *string `json:"cover_media_id"`
-	CategorySlug      string  `json:"category"`
-	AuthorName        string  `json:"author"`
-	Status            string  `json:"status"`
-	SEOTitle          string  `json:"seo_title"`
-	SEODescription    string  `json:"seo_description"`
-	RelatedFestivalID *string `json:"related_festival_id"`
+	Title             string          `json:"title"`
+	Slug              string          `json:"slug"`
+	Excerpt           string          `json:"excerpt"`
+	Content           json.RawMessage `json:"content"`
+	CoverMediaID      *string         `json:"cover_media_id"`
+	CategorySlug      string          `json:"category"`
+	AuthorName        string          `json:"author"`
+	Status            string          `json:"status"`
+	SEOTitle          string          `json:"seo_title"`
+	SEODescription    string          `json:"seo_description"`
+	RelatedFestivalID *string         `json:"related_festival_id"`
 }
 
 func (s *Server) adminListArticles(c *gin.Context) { httpx.OK(c, s.queryArticles(c, false, 0)) }
@@ -244,6 +245,16 @@ func (s *Server) adminCreateArticle(c *gin.Context) {
 		httpx.BadRequest(c, "Title is required.")
 		return
 	}
+
+	if len(in.Content) == 0 || string(in.Content) == "null" {
+		in.Content = json.RawMessage("[]")
+	}
+
+	if err := blocks.ValidateArticleContent(c.Request.Context(), s.db, in.Content); err != nil {
+		httpx.BadRequest(c, err.Error())
+		return
+	}
+
 	u := s.currentUser(c)
 	status := "draft"
 	if in.Status == "pending_review" {
@@ -269,7 +280,7 @@ func (s *Server) adminCreateArticle(c *gin.Context) {
 	author := firstNonEmpty(in.AuthorName, u.Name)
 	var id string
 	q := `INSERT INTO articles (title, slug, excerpt, content, cover_media_id, category_id, author_id, author_name, status, published_at, seo_title, seo_description, related_festival_id)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::article_status, CASE WHEN $9='published' THEN now() ELSE NULL END, $10,$11,$12) RETURNING id`
+		VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9::article_status, CASE WHEN $9='published' THEN now() ELSE NULL END, $10,$11,$12) RETURNING id`
 	err := s.db.QueryRow(c.Request.Context(), q, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, u.ID, author, status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID).Scan(&id)
 	if err != nil {
 		httpx.BadRequest(c, "Failed to save article: "+err.Error())
@@ -284,6 +295,16 @@ func (s *Server) adminUpdateArticle(c *gin.Context) {
 	if !bindJSON(c, &in) {
 		return
 	}
+
+	if len(in.Content) == 0 || string(in.Content) == "null" {
+		in.Content = json.RawMessage("[]")
+	}
+
+	if err := blocks.ValidateArticleContent(c.Request.Context(), s.db, in.Content); err != nil {
+		httpx.BadRequest(c, err.Error())
+		return
+	}
+
 	id := c.Param("id")
 	u := s.currentUser(c)
 	var oldSlug, curStatus string
@@ -320,7 +341,7 @@ func (s *Server) adminUpdateArticle(c *gin.Context) {
 			}
 		}
 	}
-	_, err := s.db.Exec(c.Request.Context(), `UPDATE articles SET title=$2, slug=$3, excerpt=$4, content=$5, cover_media_id=$6, category_id=$7, author_name=$8, status=$9::article_status,
+	_, err := s.db.Exec(c.Request.Context(), `UPDATE articles SET title=$2, slug=$3, excerpt=$4, content=$5::jsonb, cover_media_id=$6, category_id=$7, author_name=$8, status=$9::article_status,
 		seo_title=$10, seo_description=$11, related_festival_id=$12, updated_at=now() WHERE id=$1`,
 		id, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, firstNonEmpty(in.AuthorName, u.Name), status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID)
 	if err != nil {

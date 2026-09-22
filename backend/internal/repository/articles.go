@@ -53,7 +53,7 @@ func (r *Repository) GetArticles(ctx context.Context, publishedOnly bool, limit 
 
 func (r *Repository) CreateArticle(ctx context.Context, a *models.Article) error {
 	q := `INSERT INTO articles (title, slug, excerpt, content, category_id, author_id, author_name, status, published_at, seo_title, seo_description, cover_media_id)
-		VALUES ($1, $2, $3, $4, (SELECT id FROM article_categories WHERE slug=$5 LIMIT 1), $6, $7, $8::article_status, $9, $10, $11, $12)
+		VALUES ($1, $2, $3, $4::jsonb, (SELECT id FROM article_categories WHERE slug=$5 LIMIT 1), $6, $7, $8::article_status, $9, $10, $11, $12)
 		RETURNING id`
 	return r.pool.QueryRow(ctx, q,
 		a.Title, a.Slug, a.Excerpt, a.Content, a.Category, nil, a.AuthorName, a.Status, nil, nil, nil, nil,

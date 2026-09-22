@@ -43,13 +43,81 @@ export type Festival = {
   registration_url?: string | null;
 };
 
+export type HeadingBlock = {
+  type: "heading";
+  level: 2 | 3;
+  text: string;
+};
+
+export type ParagraphBlock = {
+  type: "paragraph";
+  text: string;
+};
+
+export type ImageBlock = {
+  type: "image";
+  mediaId: string;
+  imageSize?: "small" | "medium" | "large" | "full";
+  alt?: string;
+  caption?: string;
+  url?: string;
+  thumb_url?: string;
+};
+
+export type SplitBlock = {
+  type: "split";
+  imagePosition: "left" | "right";
+  mediaId: string;
+  imageSize?: "small" | "medium" | "large" | "full";
+  text: string;
+  alt?: string;
+  caption?: string;
+  url?: string;
+  thumb_url?: string;
+};
+
+export type QuoteBlock = {
+  type: "quote";
+  text: string;
+  attribution?: string;
+};
+
+export type YouTubeBlock = {
+  type: "youtube";
+  videoId: string;
+  caption?: string;
+};
+
+export type GalleryMediaItem = {
+  id: string;
+  url: string;
+  thumb_url: string;
+  alt?: string;
+  caption?: string;
+};
+
+export type GalleryBlock = {
+  type: "gallery";
+  mediaIds: string[];
+  media?: GalleryMediaItem[];
+};
+
+export type ArticleBlock =
+  | HeadingBlock
+  | ParagraphBlock
+  | ImageBlock
+  | SplitBlock
+  | QuoteBlock
+  | YouTubeBlock
+  | GalleryBlock;
+
 export type Article = {
-  createdAt: any;
+  createdAt?: any;
   id: string;
   title: string;
   slug: string;
   excerpt: string;
-  content: string;
+  content: ArticleBlock[] | string;
   cover_url?: string;
   cover_media_id?: string | null;
   category: string;

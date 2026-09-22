@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type User struct {
 	ID     string `json:"id"`
@@ -50,21 +53,21 @@ type Festival struct {
 }
 
 type Article struct {
-	ID                string  `json:"id"`
-	Title             string  `json:"title"`
-	Slug              string  `json:"slug"`
-	Excerpt           string  `json:"excerpt"`
-	Content           string  `json:"content"`
-	CoverURL          string  `json:"cover_url,omitempty"`
-	CoverMediaID      *string `json:"cover_media_id,omitempty"`
-	Category          string  `json:"category"`
-	CategorySlug      string  `json:"category_slug,omitempty"`
-	AuthorName        string  `json:"author_name"`
-	Status            string  `json:"status"`
-	PublishedAt       *string `json:"published_at,omitempty"`
-	SEOTitle          string  `json:"seo_title,omitempty"`
-	SEODescription    string  `json:"seo_description,omitempty"`
-	RelatedFestivalID *string `json:"related_festival_id,omitempty"`
+	ID                string          `json:"id"`
+	Title             string          `json:"title"`
+	Slug              string          `json:"slug"`
+	Excerpt           string          `json:"excerpt"`
+	Content           json.RawMessage `json:"content"`
+	CoverURL          string          `json:"cover_url,omitempty"`
+	CoverMediaID      *string         `json:"cover_media_id,omitempty"`
+	Category          string          `json:"category"`
+	CategorySlug      string          `json:"category_slug,omitempty"`
+	AuthorName        string          `json:"author_name"`
+	Status            string          `json:"status"`
+	PublishedAt       *string         `json:"published_at,omitempty"`
+	SEOTitle          string          `json:"seo_title,omitempty"`
+	SEODescription    string          `json:"seo_description,omitempty"`
+	RelatedFestivalID *string         `json:"related_festival_id,omitempty"`
 }
 
 type Album struct {

@@ -143,39 +143,56 @@ func festivals(ctx context.Context, pool *pgxpool.Pool) error {
 }
 
 func articles(ctx context.Context, pool *pgxpool.Pool) error {
+	a1, _ := json.Marshal([]map[string]any{
+		{"type": "heading", "level": 2, "text": "A simple introduction"},
+		{"type": "paragraph", "text": "Bhakti-yoga is the yoga of devotion. At ISKCON Margao we practise it through kirtan (chanting), Krishna Katha (hearing), prasadam, and friendship."},
+		{"type": "paragraph", "text": "You do not need to be a scholar. You can begin by sitting in kirtan and listening."},
+	})
 	_, err := pool.Exec(ctx, `INSERT INTO articles (title, slug, excerpt, content, category_id, author_name, status, published_at, seo_title, seo_description)
 		SELECT 'What is Bhakti-yoga?', 'what-is-bhakti-yoga',
 		 'Bhakti-yoga is the path of loving devotion to Krishna — approachable, practical, and open to everyone.',
-		 E'## A simple introduction\n\nBhakti-yoga is the yoga of devotion. At ISKCON Margao we practise it through kirtan (chanting), Krishna Katha (hearing), prasadam, and friendship.\n\nYou do not need to be a scholar. You can begin by sitting in kirtan and listening.',
+		 $1::jsonb,
 		 c.id, 'ISKCON Margao', 'published', now(),
 		 'What is Bhakti-yoga? | ISKCON Margao',
 		 'A gentle introduction to bhakti-yoga as practised at ISKCON Margao in South Goa.'
 		FROM article_categories c WHERE c.slug='bhagavad-gita'
-		ON CONFLICT (slug) DO NOTHING`)
+		ON CONFLICT (slug) DO NOTHING`, a1)
 	if err != nil {
 		return err
 	}
+
+	a2, _ := json.Marshal([]map[string]any{
+		{"type": "heading", "level": 2, "text": "The maha-mantra"},
+		{"type": "paragraph", "text": "Hare Krishna Hare Krishna, Krishna Krishna Hare Hare,\nHare Rama Hare Rama, Rama Rama Hare Hare."},
+		{"type": "paragraph", "text": "At Friday and Saturday programs in Margao, kirtan is the heart of our gathering. You can sing, or simply listen."},
+	})
 	_, err = pool.Exec(ctx, `INSERT INTO articles (title, slug, excerpt, content, category_id, author_name, status, published_at, seo_title, seo_description)
 		SELECT 'Why do we chant Hare Krishna?', 'why-do-we-chant-hare-krishna',
 		 'The Hare Krishna maha-mantra is a simple, joyful way to connect the heart with Krishna.',
-		 E'## The maha-mantra\n\nHare Krishna Hare Krishna, Krishna Krishna Hare Hare,\nHare Rama Hare Rama, Rama Rama Hare Hare.\n\nAt Friday and Saturday programs in Margao, kirtan is the heart of our gathering. You can sing, or simply listen.',
+		 $1::jsonb,
 		 c.id, 'ISKCON Margao', 'published', now(),
 		 'Why do we chant Hare Krishna? | ISKCON Margao',
 		 'Learn why ISKCON Margao chants the Hare Krishna maha-mantra during kirtan.'
 		FROM article_categories c WHERE c.slug='krishna-katha'
-		ON CONFLICT (slug) DO NOTHING`)
+		ON CONFLICT (slug) DO NOTHING`, a2)
 	if err != nil {
 		return err
 	}
+
+	a3, _ := json.Marshal([]map[string]any{
+		{"type": "heading", "level": 2, "text": "Who am I? What is real happiness?"},
+		{"type": "paragraph", "text": "The Gita is not a book for a distant elite. At ISKCON Margao we explore it in Krishna Katha in a way that newcomers can follow."},
+		{"type": "paragraph", "text": "Come, listen, and ask questions."},
+	})
 	_, err = pool.Exec(ctx, `INSERT INTO articles (title, slug, excerpt, content, category_id, author_name, status, published_at, seo_title, seo_description)
 		SELECT 'Understanding Bhagavad-gita', 'understanding-bhagavad-gita',
 		 'The Bhagavad-gita addresses life''s deepest questions with clarity and compassion.',
-		 E'## Who am I? What is real happiness?\n\nThe Gita is not a book for a distant elite. At ISKCON Margao we explore it in Krishna Katha in a way that newcomers can follow.\n\nCome, listen, and ask questions.',
+		 $1::jsonb,
 		 c.id, 'ISKCON Margao', 'published', now(),
 		 'Understanding Bhagavad-gita | ISKCON Margao',
 		 'Explore the Bhagavad-gita with the community at ISKCON Margao, South Goa.'
 		FROM article_categories c WHERE c.slug='bhagavad-gita'
-		ON CONFLICT (slug) DO NOTHING`)
+		ON CONFLICT (slug) DO NOTHING`, a3)
 	return err
 }
 

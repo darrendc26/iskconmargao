@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/iskcongoa/margao/internal/blocks"
 	"github.com/iskcongoa/margao/internal/httpx"
 	"github.com/iskcongoa/margao/internal/models"
 )
@@ -221,6 +222,9 @@ func (s *Server) queryArticles(c *gin.Context, publishedOnly bool, limit int) []
 			a.CoverURL = s.mediaURL(*orig)
 		} else {
 			a.CoverURL = ""
+		}
+		if len(a.Content) > 0 {
+			a.Content = blocks.HydrateArticleMedia(c.Request.Context(), s.db, s.mediaURL, a.Content)
 		}
 		out = append(out, a)
 	}
