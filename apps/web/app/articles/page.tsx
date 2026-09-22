@@ -93,7 +93,7 @@ export default async function ArticlesPage() {
                           : ""}
                       </p>
 
-                      <h2 className="mt-4 font-serif text-3xl leading-tight text-forest sm:text-4xl">
+                      <h2 className="mt-4 font-serif text-3xl leading-tight text-forest sm:text-4xl group-hover:text-saffron transition">
                         {latestArticle.title}
                       </h2>
 
@@ -147,7 +147,7 @@ export default async function ArticlesPage() {
                             </p>
                           )}
 
-                          <h3 className="mt-3 font-serif text-2xl leading-tight text-forest">
+                          <h3 className="mt-3 font-serif text-2xl leading-tight text-forest group-hover:text-saffron transition">
                             {article.title}
                           </h3>
 

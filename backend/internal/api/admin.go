@@ -232,6 +232,7 @@ type articleIn struct {
 	SEOTitle          string          `json:"seo_title"`
 	SEODescription    string          `json:"seo_description"`
 	RelatedFestivalID *string         `json:"related_festival_id"`
+	ShowCoverInBody   *bool           `json:"show_cover_in_body"`
 }
 
 func (s *Server) adminListArticles(c *gin.Context) { httpx.OK(c, s.queryArticles(c, false, 0)) }
@@ -278,10 +279,14 @@ func (s *Server) adminCreateArticle(c *gin.Context) {
 		}
 	}
 	author := firstNonEmpty(in.AuthorName, u.Name)
+	showCover := true
+	if in.ShowCoverInBody != nil {
+		showCover = *in.ShowCoverInBody
+	}
 	var id string
-	q := `INSERT INTO articles (title, slug, excerpt, content, cover_media_id, category_id, author_id, author_name, status, published_at, seo_title, seo_description, related_festival_id)
-		VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9::article_status, CASE WHEN $9='published' THEN now() ELSE NULL END, $10,$11,$12) RETURNING id`
-	err := s.db.QueryRow(c.Request.Context(), q, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, u.ID, author, status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID).Scan(&id)
+	q := `INSERT INTO articles (title, slug, excerpt, content, cover_media_id, category_id, author_id, author_name, status, published_at, seo_title, seo_description, related_festival_id, show_cover_in_body)
+		VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9::article_status, CASE WHEN $9='published' THEN now() ELSE NULL END, $10,$11,$12,$13) RETURNING id`
+	err := s.db.QueryRow(c.Request.Context(), q, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, u.ID, author, status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID, showCover).Scan(&id)
 	if err != nil {
 		httpx.BadRequest(c, "Failed to save article: "+err.Error())
 		return
@@ -341,9 +346,13 @@ func (s *Server) adminUpdateArticle(c *gin.Context) {
 			}
 		}
 	}
+	showCover := true
+	if in.ShowCoverInBody != nil {
+		showCover = *in.ShowCoverInBody
+	}
 	_, err := s.db.Exec(c.Request.Context(), `UPDATE articles SET title=$2, slug=$3, excerpt=$4, content=$5::jsonb, cover_media_id=$6, category_id=$7, author_name=$8, status=$9::article_status,
-		seo_title=$10, seo_description=$11, related_festival_id=$12, updated_at=now() WHERE id=$1`,
-		id, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, firstNonEmpty(in.AuthorName, u.Name), status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID)
+		seo_title=$10, seo_description=$11, related_festival_id=$12, show_cover_in_body=$13, updated_at=now() WHERE id=$1`,
+		id, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, firstNonEmpty(in.AuthorName, u.Name), status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID, showCover)
 	if err != nil {
 		httpx.BadRequest(c, "Failed to update article: "+err.Error())
 		return
@@ -351,6 +360,7 @@ func (s *Server) adminUpdateArticle(c *gin.Context) {
 	s.audit(c.Request.Context(), u.ID, "ARTICLE_UPDATED", "articles", id, nil)
 	httpx.OK(c, gin.H{"id": id, "slug": slug, "status": status})
 }
+
 
 func (s *Server) adminDeleteArticle(c *gin.Context) {
 	_, _ = s.db.Exec(c.Request.Context(), `DELETE FROM articles WHERE id=$1`, c.Param("id"))

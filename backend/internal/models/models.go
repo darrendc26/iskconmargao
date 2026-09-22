@@ -68,6 +68,7 @@ type Article struct {
 	SEOTitle          string          `json:"seo_title,omitempty"`
 	SEODescription    string          `json:"seo_description,omitempty"`
 	RelatedFestivalID *string         `json:"related_festival_id,omitempty"`
+	ShowCoverInBody   bool            `json:"show_cover_in_body"`
 }
 
 type Album struct {

@@ -191,7 +191,7 @@ func (s *Server) getFestivalPublic(c *gin.Context) {
 func (s *Server) queryArticles(c *gin.Context, publishedOnly bool, limit int) []models.Article {
 	q := `SELECT a.id, a.title, a.slug, a.excerpt, a.content, COALESCE(cat.name,''), COALESCE(cat.slug,''), a.author_name, a.status::text,
 		to_char(a.published_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"'), COALESCE(a.seo_title,''), COALESCE(a.seo_description,''), a.related_festival_id,
-		a.cover_media_id, m.medium_key, m.original_key
+		a.cover_media_id, m.medium_key, m.original_key, COALESCE(a.show_cover_in_body, true)
 		FROM articles a
 		LEFT JOIN article_categories cat ON cat.id=a.category_id
 		LEFT JOIN media m ON m.id=a.cover_media_id`
@@ -212,7 +212,7 @@ func (s *Server) queryArticles(c *gin.Context, publishedOnly bool, limit int) []
 		var a models.Article
 		var pub *string
 		var med, orig *string
-		if err := rows.Scan(&a.ID, &a.Title, &a.Slug, &a.Excerpt, &a.Content, &a.Category, &a.CategorySlug, &a.AuthorName, &a.Status, &pub, &a.SEOTitle, &a.SEODescription, &a.RelatedFestivalID, &a.CoverMediaID, &med, &orig); err != nil {
+		if err := rows.Scan(&a.ID, &a.Title, &a.Slug, &a.Excerpt, &a.Content, &a.Category, &a.CategorySlug, &a.AuthorName, &a.Status, &pub, &a.SEOTitle, &a.SEODescription, &a.RelatedFestivalID, &a.CoverMediaID, &med, &orig, &a.ShowCoverInBody); err != nil {
 			continue
 		}
 		a.PublishedAt = pub

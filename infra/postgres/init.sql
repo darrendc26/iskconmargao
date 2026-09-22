@@ -184,6 +184,7 @@ CREATE TABLE IF NOT EXISTS articles (
     seo_description TEXT,
     og_media_id UUID REFERENCES media(id) ON DELETE SET NULL,
     related_festival_id UUID REFERENCES festivals(id) ON DELETE SET NULL,
+    show_cover_in_body BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

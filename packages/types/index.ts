@@ -127,6 +127,7 @@ export type Article = {
   published_at?: string | null;
   seo_title?: string;
   seo_description?: string;
+  show_cover_in_body?: boolean;
 };
 
 export type Album = {

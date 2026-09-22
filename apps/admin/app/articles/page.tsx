@@ -22,6 +22,7 @@ export default function Page() {
   const [blocks, setBlocks] = useState<ArticleBlock[]>([]);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  const [showCoverInBody, setShowCoverInBody] = useState(true);
 
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
   const formRef = useRef<HTMLFormElement>(null);
@@ -75,6 +76,7 @@ export default function Page() {
 
     setCoverPreviewUrl(article.cover_url || null);
     setCoverMediaId(article.cover_media_id || null);
+    setShowCoverInBody(article.show_cover_in_body !== false);
     setActiveTab("edit");
     setMsg(`Editing article: "${article.title}"`);
     if (formRef.current) {
@@ -90,6 +92,7 @@ export default function Page() {
     setBlocks([]);
     setCoverMediaId(null);
     setCoverPreviewUrl(null);
+    setShowCoverInBody(true);
     setMsg("");
   }
 
@@ -112,6 +115,7 @@ export default function Page() {
         content: blocks,
         category,
         cover_media_id: coverMediaId,
+        show_cover_in_body: showCoverInBody,
         status: statusToSet,
       }),
     });
@@ -241,7 +245,7 @@ export default function Page() {
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-forest">Article Cover Image</h3>
-                <p className="text-xs text-ink/70 mt-0.5">Banner photo displayed at the top of the article page.</p>
+                <p className="text-xs text-ink/70 mt-0.5">Thumbnail displayed in article lists and optionally at the top of the article.</p>
               </div>
               <label className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-forest/10 hover:bg-forest/20 text-forest px-4 py-2 text-xs font-medium transition">
                 <span>{uploadingCover ? "Uploading..." : "📷 Choose Cover Photo"}</span>
@@ -256,26 +260,43 @@ export default function Page() {
             </div>
 
             {coverPreviewUrl && (
-              <div className="mt-4 relative inline-block group">
-                <img
-                  src={coverPreviewUrl}
-                  alt="Cover preview"
-                  className="h-40 w-full max-w-md object-cover rounded-xl border border-gold/30 shadow-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCoverMediaId(null);
-                    setCoverPreviewUrl(null);
-                  }}
-                  className="absolute top-2 right-2 bg-red-800 text-white rounded-full p-1.5 text-xs shadow hover:bg-red-900"
-                  title="Remove cover photo"
-                >
-                  ✕
-                </button>
+              <div className="mt-4 space-y-3">
+                <div className="relative inline-block group">
+                  <img
+                    src={coverPreviewUrl}
+                    alt="Cover preview"
+                    className="h-40 w-full max-w-md object-cover rounded-xl border border-gold/30 shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCoverMediaId(null);
+                      setCoverPreviewUrl(null);
+                    }}
+                    className="absolute top-2 right-2 bg-red-800 text-white rounded-full p-1.5 text-xs shadow hover:bg-red-900"
+                    title="Remove cover photo"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div>
+                  <label className="inline-flex items-center gap-2 text-xs font-medium text-forest cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-gold/30 hover:bg-cream/50 transition">
+                    <input
+                      type="checkbox"
+                      checked={showCoverInBody}
+                      onChange={(e) => setShowCoverInBody(e.target.checked)}
+                      className="rounded border-gold/40 text-forest focus:ring-forest accent-forest"
+                    />
+                    <span>Show cover image at top of article page</span>
+                  </label>
+                  <p className="text-[11px] text-ink/60 mt-1 pl-1">
+                    Uncheck this if you only want this image as a thumbnail on the blog listing card.
+                  </p>
+                </div>
               </div>
             )}
           </div>
+
 
           {/* Excerpt */}
           <div>
@@ -332,7 +353,7 @@ export default function Page() {
           <h1 className="font-serif text-3xl md:text-4xl text-forest mt-2">{title || "Untitled Article"}</h1>
           {excerpt && <p className="mt-3 text-lg text-ink/70 leading-relaxed italic">{excerpt}</p>}
 
-          {coverPreviewUrl && (
+          {coverPreviewUrl && showCoverInBody && (
             <img
               src={coverPreviewUrl}
               alt=""

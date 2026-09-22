@@ -44,7 +44,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <PageHero eyebrow={a.category} title={a.title}>
         {a.excerpt}
       </PageHero>
-      {a.cover_url && (
+      {a.cover_url && a.show_cover_in_body !== false && (
         <div className="mx-auto max-w-4xl px-4 mb-8">
           <img
             src={a.cover_url}
