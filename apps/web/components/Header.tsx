@@ -6,13 +6,11 @@ import { Photo, photos } from "@/components/Photo";
 
 const discover = [
   { href: "/discover/krishna", label: "Krishna" },
+  { href: "/discover/radha-rani", label: "Srimati Radha Rani" },
+  { href: "/discover/caitanya", label: "Caitanya Mahaprabhu", },
   { href: "/discover/bhagavad-gita", label: "Bhagavad-gita" },
   { href: "/discover/bhakti-yoga", label: "Bhakti-yoga" },
   { href: "/discover/chanting", label: "Chanting" },
-  {
-    href: "/discover/caitanya",
-    label: "Caitanya Mahaprabhu",
-  },
   // {
   //   href: "/about/srila-prabhupada",
   //   label: "Srila Prabhupada",

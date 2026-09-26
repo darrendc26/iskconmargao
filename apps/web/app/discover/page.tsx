@@ -13,10 +13,11 @@ export const metadata: Metadata = {
 
 const cards = [
   { href: "/discover/krishna", title: "Krishna", desc: "Who is Krishna?", img: photos.hero },
+  { href: "/discover/radha-rani", title: "Srimati Radharani", desc: "The supreme goddess of devotion and Krishna's pleasure potency.", img: photos.radharani },
+  { href: "/discover/caitanya", title: "Sri Caitanya Mahaprabhu", desc: "The teachings and sankirtana movement of Caitanya Mahaprabhu.", img: photos.caitanya },
   { href: "/discover/bhagavad-gita", title: "Bhagavad-gita", desc: "The teachings of Krishna and Arjuna.", img: photos.gita },
   { href: "/discover/bhakti-yoga", title: "Bhakti-yoga", desc: "The path of devotional service.", img: photos.lotus },
   { href: "/discover/chanting", title: "Hare Krishna Maha-mantra", desc: "Understanding the chanting of the holy names.", img: photos.chanting },
-  { href: "/discover/caitanya", title: "Sri Caitanya Mahaprabhu", desc: "The teachings and sankirtana movement of Caitanya Mahaprabhu.", img: photos.caitanya },
   { href: "/about/srila-prabhupada", title: "Srila Prabhupada", desc: "The Founder-Acharya of ISKCON.", img: photos.prabhupada },
 ];
 
