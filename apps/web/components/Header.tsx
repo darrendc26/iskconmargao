@@ -9,6 +9,7 @@ const discover = [
   { href: "/discover/radha-rani", label: "Srimati Radha Rani" },
   { href: "/discover/caitanya", label: "Caitanya Mahaprabhu", },
   { href: "/discover/bhagavad-gita", label: "Bhagavad-gita" },
+  { href: "/discover/srimad-bhagavatam", label: "Śrīmad-Bhāgavatam" },
   { href: "/discover/bhakti-yoga", label: "Bhakti-yoga" },
   { href: "/discover/chanting", label: "Chanting" },
   // {

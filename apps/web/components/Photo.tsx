@@ -7,6 +7,7 @@ export const photos = {
   prabhupada: "/images/srilaprabhupada.webp",
   srilaprabhupada: "/images/srilaprabhupada.webp",
   gita: "/images/gita.jpg",
+  bhagavatam: "/images/bhagavatam.jpg",
   chanting: "/images/chanting.jpg",
   centre: "/images/centre.jpg",
   peacock: "/images/peacock.jpg",
