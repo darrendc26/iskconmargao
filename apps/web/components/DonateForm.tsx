@@ -239,7 +239,7 @@ export function DonateForm({ purposes, initial }: Props) {
           </button>
         ) : (
           <div className="mt-3">
-            <div className="flex items-center rounded-xl border border-forest/20 bg-white px-4 transition focus-within:border-forest">
+            <div className="flex items-center rounded-xl border border-forest/20 bg-white px-4 transition outline-none focus-within:outline-none focus-visible:outline-none">
               <span className="text-lg text-ink-muted">
                 ₹
               </span>
@@ -264,7 +264,7 @@ export function DonateForm({ purposes, initial }: Props) {
                   }
                 }}
                 placeholder="Enter amount"
-                className="w-full bg-transparent px-3 py-3.5 text-base text-ink outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full bg-transparent px-3 py-3.5 text-base text-ink outline-none focus:outline-none focus-visible:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
