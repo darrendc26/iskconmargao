@@ -34,10 +34,21 @@ export function DonateForm({ purposes, initial }: Props) {
 
   const [customOpen, setCustomOpen] = useState(false);
   const [customAmount, setCustomAmount] = useState("");
+  const [coverFee, setCoverFee] = useState(false);
 
   const selectedAmount = customOpen
     ? Number(customAmount)
     : amount;
+
+  const feeAmount =
+    coverFee && selectedAmount && selectedAmount > 0
+      ? Math.round(selectedAmount * 0.025)
+      : 0;
+
+  const totalAmount =
+    selectedAmount && selectedAmount > 0
+      ? selectedAmount + feeAmount
+      : 0;
 
   function handlePresetSelect(value: number) {
     setAmount(value);
@@ -77,7 +88,10 @@ export function DonateForm({ purposes, initial }: Props) {
         mobile,
         email,
         purpose,
-        amount: selectedAmount
+        amount: selectedAmount,
+        coverFee,
+        feeAmount,
+        totalAmount
       }
 
       to your existing donation/order API.
@@ -89,6 +103,9 @@ export function DonateForm({ purposes, initial }: Props) {
       email: email.trim() || null,
       purpose,
       amount: selectedAmount,
+      coverFee,
+      feeAmount,
+      totalAmount,
     });
   }
 
@@ -247,21 +264,25 @@ export function DonateForm({ purposes, initial }: Props) {
               <input
                 id="custom-amount"
                 name="customAmount"
-                type="number"
-                min="1"
-                step="1"
+                type="text"
                 inputMode="numeric"
+                pattern="[0-9]*"
                 autoFocus
                 value={customAmount}
-                onChange={(e) => {
-                  const value = e.target.value;
-
+                onKeyDown={(e) => {
                   if (
-                    value === "" ||
-                    Number(value) >= 0
+                    e.key === "ArrowUp" ||
+                    e.key === "ArrowDown"
                   ) {
-                    setCustomAmount(value);
+                    e.preventDefault();
                   }
+                }}
+                onChange={(e) => {
+                  const value = e.target.value.replace(
+                    /[^0-9]/g,
+                    ""
+                  );
+                  setCustomAmount(value);
                 }}
                 placeholder="Enter amount"
                 className="w-full bg-transparent px-3 py-3.5 text-base text-ink outline-none focus:outline-none focus-visible:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -287,19 +308,61 @@ export function DonateForm({ purposes, initial }: Props) {
         )}
       </div>
 
+      {/* COVER PAYMENT PROCESSING COSTS */}
+      <div className="rounded-xl border border-forest/15 bg-white p-4">
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={coverFee}
+            onChange={(e) =>
+              setCoverFee(e.target.checked)
+            }
+            className="mt-1 h-4 w-4 rounded border-forest/30 text-forest focus:ring-forest accent-forest cursor-pointer"
+          />
+
+          <div>
+            <span className="text-sm font-medium text-forest">
+              Cover payment processing costs — 2.5%
+            </span>
+
+            <p className="mt-1 text-xs text-ink-muted leading-relaxed">
+              This helps cover payment processing charges so that your intended donation can reach ISKCON Margao in full.
+            </p>
+          </div>
+        </label>
+      </div>
+
       {/* SUMMARY */}
-      <div className="rounded-xl bg-forest/5 px-5 py-4">
+      <div className="rounded-xl bg-forest/5 px-5 py-4 space-y-2">
         <div className="flex items-center justify-between gap-4">
           <span className="text-sm text-ink-muted">
-            Your offering
+            {coverFee && selectedAmount && selectedAmount > 0
+              ? "Base donation"
+              : "Your offering"}
+          </span>
+
+          <span className="text-base font-medium text-forest">
+            {selectedAmount && selectedAmount > 0
+              ? `₹${selectedAmount.toLocaleString("en-IN")}`
+              : "—"}
+          </span>
+        </div>
+
+        {coverFee && selectedAmount && selectedAmount > 0 ? (
+          <div className="flex items-center justify-between gap-4 text-xs text-ink-muted border-t border-forest/10 pt-2">
+            <span>Processing fee (2.5%)</span>
+            <span>+₹{feeAmount.toLocaleString("en-IN")}</span>
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-between gap-4 border-t border-forest/10 pt-2">
+          <span className="text-sm font-medium text-forest">
+            Total offering
           </span>
 
           <span className="font-serif text-2xl text-forest">
-            {selectedAmount &&
-              selectedAmount > 0
-              ? `₹${selectedAmount.toLocaleString(
-                "en-IN"
-              )}`
+            {totalAmount > 0
+              ? `₹${totalAmount.toLocaleString("en-IN")}`
               : "—"}
           </span>
         </div>
