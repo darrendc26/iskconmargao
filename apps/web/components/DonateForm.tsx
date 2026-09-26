@@ -264,7 +264,7 @@ export function DonateForm({ purposes, initial }: Props) {
                   }
                 }}
                 placeholder="Enter amount"
-                className="w-full bg-transparent px-3 py-3.5 text-base text-ink outline-none"
+                className="w-full bg-transparent px-3 py-3.5 text-base text-ink outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
