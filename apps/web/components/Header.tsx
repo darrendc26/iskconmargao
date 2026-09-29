@@ -194,7 +194,7 @@ export function Header() {
               </Link>
 
               <Dropdown
-                label="Discover Krishna"
+                label="Discover"
                 items={discover}
               />
 

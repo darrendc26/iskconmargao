@@ -16,18 +16,18 @@ import (
 func (s *Server) adminListPrograms(c *gin.Context) { httpx.OK(c, s.queryPrograms(c, false)) }
 
 type programIn struct {
-	Title        string `json:"title"`
-	Slug         string `json:"slug"`
-	Description  string `json:"description"`
-	DayOfWeek    *int   `json:"day_of_week"`
-	StartTime    *string `json:"start_time"`
-	EndTime      *string `json:"end_time"`
-	Location     string `json:"location"`
-	ProgramItems []any  `json:"program_items"`
-	Active       *bool  `json:"active"`
-	Featured     *bool  `json:"featured"`
-	IsSpecial    *bool  `json:"is_special"`
-	OccursOn     *string `json:"occurs_on"`
+	Title             string  `json:"title"`
+	Slug              string  `json:"slug"`
+	Description       string  `json:"description"`
+	DayOfWeek         *int    `json:"day_of_week"`
+	StartTime         *string `json:"start_time"`
+	EndTime           *string `json:"end_time"`
+	Location          string  `json:"location"`
+	ProgramItems      []any   `json:"program_items"`
+	Active            *bool   `json:"active"`
+	Featured          *bool   `json:"featured"`
+	IsSpecial         *bool   `json:"is_special"`
+	OccursOn          *string `json:"occurs_on"`
 	InvitationMediaID *string `json:"invitation_media_id"`
 	SortOrder         *int    `json:"sort_order"`
 }
@@ -361,7 +361,6 @@ func (s *Server) adminUpdateArticle(c *gin.Context) {
 	httpx.OK(c, gin.H{"id": id, "slug": slug, "status": status})
 }
 
-
 func (s *Server) adminDeleteArticle(c *gin.Context) {
 	_, _ = s.db.Exec(c.Request.Context(), `DELETE FROM articles WHERE id=$1`, c.Param("id"))
 	s.audit(c.Request.Context(), s.currentUser(c).ID, "ARTICLE_DELETED", "articles", c.Param("id"), nil)
@@ -449,10 +448,10 @@ func (s *Server) adminDeleteAlbum(c *gin.Context) {
 func (s *Server) adminReorderPhotos(c *gin.Context) {
 	var in struct {
 		Photos []struct {
-			ID    string `json:"id"`
-			Sort  int    `json:"sort_order"`
-			Alt   string `json:"alt_text"`
-			Cap   string `json:"caption"`
+			ID   string `json:"id"`
+			Sort int    `json:"sort_order"`
+			Alt  string `json:"alt_text"`
+			Cap  string `json:"caption"`
 		} `json:"photos"`
 	}
 	if !bindJSON(c, &in) {

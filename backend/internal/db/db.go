@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/iskcongoa/margao/migrations"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,18 +19,34 @@ func Connect(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	}
 	cfg.ConnConfig.RuntimeParams["client_encoding"] = "UTF8"
 	cfg.MaxConns = 25
-	cfg.MinConns = 5
-	cfg.MaxConnIdleTime = 5 * 60 * 1000000000 // 5m
-	cfg.MaxConnLifetime = 30 * 60 * 1000000000 // 30m
-	pool, err := pgxpool.NewWithConfig(ctx, cfg)
-	if err != nil {
-		return nil, err
+	cfg.MinConns = 2
+	cfg.MaxConnIdleTime = 5 * time.Minute
+	cfg.MaxConnLifetime = 30 * time.Minute
+	cfg.HealthCheckPeriod = 1 * time.Minute
+
+	var pool *pgxpool.Pool
+	var lastErr error
+
+	// Retry connection up to 5 times for cold starts or transient network blips
+	for attempt := 1; attempt <= 5; attempt++ {
+		pool, err = pgxpool.NewWithConfig(ctx, cfg)
+		if err == nil {
+			if pingErr := pool.Ping(ctx); pingErr == nil {
+				return pool, nil
+			} else {
+				lastErr = pingErr
+				pool.Close()
+			}
+		} else {
+			lastErr = err
+		}
+
+		if attempt < 5 {
+			time.Sleep(time.Duration(attempt) * 2 * time.Second)
+		}
 	}
-	if err := pool.Ping(ctx); err != nil {
-		pool.Close()
-		return nil, err
-	}
-	return pool, nil
+
+	return nil, fmt.Errorf("failed to connect to database after 5 attempts: %w", lastErr)
 }
 
 func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
