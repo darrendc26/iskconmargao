@@ -95,6 +95,7 @@ func (s *Server) Router() *gin.Engine {
 	authed.Use(s.requireAuth())
 	authed.Use(middleware.OriginCheck(s.cfg.CORSOrigins))
 	authed.GET("/me", s.me)
+	authed.POST("/auth/change-password", s.changePassword)
 	authed.GET("/dashboard", s.dashboard)
 
 	authed.GET("/programs", s.adminListPrograms)

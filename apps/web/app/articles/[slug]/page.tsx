@@ -29,10 +29,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
     "@type": "Article",
     headline: a.title,
     description: a.excerpt,
+    inLanguage: a.language || "en",
     author: { "@type": "Organization", name: a.author || "ISKCON Margao" },
   };
   return (
-    <>
+    <article lang={a.language || "en"}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Breadcrumbs
         items={[
@@ -59,6 +60,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           <ShareBar text={`${a.title} — ISKCON Margao`} url={siteUrl(`/articles/${a.slug}`)} />
         </div>
       </Prose>
-    </>
+    </article>
   );
 }

@@ -62,6 +62,7 @@ type Article struct {
 	CoverMediaID      *string         `json:"cover_media_id,omitempty"`
 	Category          string          `json:"category"`
 	CategorySlug      string          `json:"category_slug,omitempty"`
+	Language          string          `json:"language"`
 	AuthorName        string          `json:"author_name"`
 	Status            string          `json:"status"`
 	PublishedAt       *string         `json:"published_at,omitempty"`
@@ -164,7 +165,7 @@ func DefaultSettings() SiteSettings {
 		ISKCONGoaURL: "https://iskcongoa.com",
 		MapsURL:      "https://maps.google.com/?q=ISKCON+Margao+Matchless+Gifts",
 		InstagramURL: "https://www.instagram.com/iskconmargao_goa/",
-		YouTubeURL:   "https://www.youtube.com/@ISKCONMargao",
+		YouTubeURL:   "https://www.youtube.com/@iskcongoamargao",
 		FacebookURL:  "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/",
 		TwitterURL:   "https://x.com/ISKCON_Margao_",
 	}

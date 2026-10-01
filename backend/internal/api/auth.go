@@ -97,6 +97,56 @@ func (s *Server) me(c *gin.Context) {
 	httpx.OK(c, gin.H{"user": s.currentUser(c)})
 }
 
+type changePasswordReq struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
+func (s *Server) changePassword(c *gin.Context) {
+	var req changePasswordReq
+	if !bindJSON(c, &req) {
+		return
+	}
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		httpx.BadRequest(c, "Current password and new password are required.")
+		return
+	}
+	if len(req.NewPassword) < 10 {
+		httpx.BadRequest(c, "New password must be at least 10 characters long.")
+		return
+	}
+
+	u := s.currentUser(c)
+	ctx := c.Request.Context()
+
+	var hash string
+	err := s.db.QueryRow(ctx, `SELECT password_hash FROM users WHERE id=$1 AND active=true`, u.ID).Scan(&hash)
+	if err != nil {
+		httpx.Unauthorized(c)
+		return
+	}
+
+	if !password.Verify(req.CurrentPassword, hash) {
+		httpx.BadRequest(c, "Current password is incorrect.")
+		return
+	}
+
+	newHash, err := password.Hash(req.NewPassword)
+	if err != nil {
+		httpx.Server(c, "")
+		return
+	}
+
+	_, err = s.db.Exec(ctx, `UPDATE users SET password_hash=$2, updated_at=now() WHERE id=$1`, u.ID, newHash)
+	if err != nil {
+		httpx.Server(c, "")
+		return
+	}
+
+	s.audit(ctx, u.ID, "USER_PASSWORD_CHANGED", "users", u.ID, nil)
+	httpx.OK(c, gin.H{"ok": true, "message": "Password changed successfully."})
+}
+
 func (s *Server) requireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ck, err := c.Request.Cookie(cookieName)

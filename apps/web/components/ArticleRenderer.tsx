@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { ArticleBlock } from "@iskcon/types";
 
 interface ArticleRendererProps {
@@ -50,6 +50,8 @@ function renderRichText(text: string): React.ReactNode[] {
 }
 
 export function ArticleRenderer({ content }: ArticleRendererProps) {
+  const [activeMediaItem, setActiveMediaItem] = useState<{ url: string; alt?: string; caption?: string } | null>(null);
+
   if (!content) return null;
 
   // Handle fallback if legacy plain-text string is passed
@@ -197,28 +199,35 @@ export function ArticleRenderer({ content }: ArticleRendererProps) {
             if (mediaItems.length === 0) return null;
 
             return (
-              <div key={idx} className="my-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <figure key={idx} className="my-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                   {mediaItems.map((item, mIdx) => (
-                    <div
+                    <button
                       key={mIdx}
-                      className="overflow-hidden rounded-2xl border border-gold/25 shadow-sm bg-white hover:shadow-md transition group"
+                      type="button"
+                      onClick={() => setActiveMediaItem({ url: item.url || item.thumb_url, alt: item.alt || "", caption: item.caption })}
+                      className="overflow-hidden rounded-2xl border border-gold/25 shadow-sm bg-white hover:shadow-md transition group text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-forest"
                     >
                       <img
-                        src={item.url || item.thumb_url}
-                        alt={item.alt || ""}
+                        src={item.thumb_url || item.url}
+                        alt={item.alt || block.caption || "Gallery image"}
                         loading="lazy"
-                        className="w-full h-48 md:h-52 object-cover group-hover:scale-105 transition duration-300"
+                        className="w-full h-36 sm:h-44 md:h-52 object-cover group-hover:scale-105 transition duration-300"
                       />
                       {item.caption && (
-                        <p className="p-2 text-xs text-center italic text-ink/70 bg-cream/40 border-t border-gold/10 truncate">
+                        <p className="p-2 text-[11px] md:text-xs text-center italic text-ink/70 bg-cream/40 border-t border-gold/10 truncate">
                           {item.caption}
                         </p>
                       )}
-                    </div>
+                    </button>
                   ))}
                 </div>
-              </div>
+                {block.caption && (
+                  <figcaption className="mt-3 text-xs md:text-sm text-center italic text-ink/70">
+                    {block.caption}
+                  </figcaption>
+                )}
+              </figure>
             );
           }
 
@@ -226,6 +235,37 @@ export function ArticleRenderer({ content }: ArticleRendererProps) {
             return null;
         }
       })}
+
+      {/* Lightbox Modal */}
+      {activeMediaItem && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setActiveMediaItem(null)}
+        >
+          <div
+            className="relative max-w-4xl w-full bg-forest/90 rounded-2xl border border-gold/40 p-3 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setActiveMediaItem(null)}
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center text-lg font-bold hover:bg-black transition"
+            >
+              ✕
+            </button>
+            <img
+              src={activeMediaItem.url}
+              alt={activeMediaItem.alt || ""}
+              className="w-full max-h-[80vh] object-contain rounded-xl"
+            />
+            {(activeMediaItem.caption || activeMediaItem.alt) && (
+              <p className="mt-3 text-xs md:text-sm text-center text-cream/90 font-medium px-4 py-1">
+                {activeMediaItem.caption || activeMediaItem.alt}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

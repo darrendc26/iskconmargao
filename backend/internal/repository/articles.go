@@ -9,7 +9,7 @@ import (
 
 func (r *Repository) GetArticles(ctx context.Context, publishedOnly bool, limit int) ([]models.Article, error) {
 	q := `SELECT a.id, a.title, a.slug, a.excerpt, a.content, COALESCE(cat.name,''), COALESCE(cat.slug,''), a.author_name, a.status::text,
-		to_char(a.published_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"'), m.medium_key, m.original_key
+		to_char(a.published_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"'), m.medium_key, m.original_key, COALESCE(a.language, 'en')
 		FROM articles a
 		LEFT JOIN article_categories cat ON cat.id=a.category_id
 		LEFT JOIN media m ON m.id=a.cover_media_id`
@@ -33,9 +33,13 @@ func (r *Repository) GetArticles(ctx context.Context, publishedOnly bool, limit 
 		var pub *string
 		var med, orig *string
 		var catSlug string
-		err := rows.Scan(&a.ID, &a.Title, &a.Slug, &a.Excerpt, &a.Content, &a.Category, &catSlug, &a.AuthorName, &a.Status, &pub, &med, &orig)
+		err := rows.Scan(&a.ID, &a.Title, &a.Slug, &a.Excerpt, &a.Content, &a.Category, &catSlug, &a.AuthorName, &a.Status, &pub, &med, &orig, &a.Language)
 		if err != nil {
 			continue
+		}
+		a.CategorySlug = catSlug
+		if a.Language == "" {
+			a.Language = "en"
 		}
 		a.PublishedAt = pub
 		if med != nil && *med != "" {
@@ -52,11 +56,14 @@ func (r *Repository) GetArticles(ctx context.Context, publishedOnly bool, limit 
 }
 
 func (r *Repository) CreateArticle(ctx context.Context, a *models.Article) error {
-	q := `INSERT INTO articles (title, slug, excerpt, content, category_id, author_id, author_name, status, published_at, seo_title, seo_description, cover_media_id)
-		VALUES ($1, $2, $3, $4::jsonb, (SELECT id FROM article_categories WHERE slug=$5 LIMIT 1), $6, $7, $8::article_status, $9, $10, $11, $12)
+	if a.Language == "" {
+		a.Language = "en"
+	}
+	q := `INSERT INTO articles (title, slug, excerpt, content, category_id, author_id, author_name, status, published_at, seo_title, seo_description, cover_media_id, language)
+		VALUES ($1, $2, $3, $4::jsonb, (SELECT id FROM article_categories WHERE slug=$5 LIMIT 1), $6, $7, $8::article_status, $9, $10, $11, $12, $13)
 		RETURNING id`
 	return r.pool.QueryRow(ctx, q,
-		a.Title, a.Slug, a.Excerpt, a.Content, a.Category, nil, a.AuthorName, a.Status, nil, nil, nil, nil,
+		a.Title, a.Slug, a.Excerpt, a.Content, a.Category, nil, a.AuthorName, a.Status, nil, nil, nil, nil, a.Language,
 	).Scan(&a.ID)
 }
 

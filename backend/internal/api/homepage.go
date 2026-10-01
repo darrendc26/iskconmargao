@@ -38,8 +38,8 @@ func (s *Server) loadSettings(c *gin.Context) models.SiteSettings {
 	if st.InstagramURL == "" {
 		st.InstagramURL = "https://www.instagram.com/iskconmargao_goa/"
 	}
-	if st.YouTubeURL == "" {
-		st.YouTubeURL = "https://www.youtube.com/@ISKCONGoaMargao"
+	if st.YouTubeURL == "" || strings.EqualFold(st.YouTubeURL, "https://www.youtube.com/@ISKCONMargao") || strings.EqualFold(st.YouTubeURL, "https://www.youtube.com/@ISKCONGoaMargao") {
+		st.YouTubeURL = "https://www.youtube.com/@iskcongoamargao"
 	}
 	if st.FacebookURL == "" {
 		st.FacebookURL = "https://www.facebook.com/servants.of.lord.krishna.backtogodhead/"

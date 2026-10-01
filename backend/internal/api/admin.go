@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/iskcongoa/margao/internal/blocks"
 	"github.com/iskcongoa/margao/internal/httpx"
+	"github.com/iskcongoa/margao/internal/medialifecycle"
 	"github.com/iskcongoa/margao/internal/models"
 	"github.com/iskcongoa/margao/internal/password"
 	"github.com/iskcongoa/margao/internal/slugify"
@@ -227,6 +228,7 @@ type articleIn struct {
 	Content           json.RawMessage `json:"content"`
 	CoverMediaID      *string         `json:"cover_media_id"`
 	CategorySlug      string          `json:"category"`
+	Language          string          `json:"language"`
 	AuthorName        string          `json:"author"`
 	Status            string          `json:"status"`
 	SEOTitle          string          `json:"seo_title"`
@@ -244,6 +246,15 @@ func (s *Server) adminCreateArticle(c *gin.Context) {
 	}
 	if trim(in.Title) == "" {
 		httpx.BadRequest(c, "Title is required.")
+		return
+	}
+
+	lang := strings.TrimSpace(strings.ToLower(in.Language))
+	if lang == "" {
+		lang = "en"
+	}
+	if lang != "en" && lang != "hi" && lang != "kok" {
+		httpx.BadRequest(c, "Invalid language. Allowed values are en, hi, kok.")
 		return
 	}
 
@@ -284,13 +295,22 @@ func (s *Server) adminCreateArticle(c *gin.Context) {
 		showCover = *in.ShowCoverInBody
 	}
 	var id string
-	q := `INSERT INTO articles (title, slug, excerpt, content, cover_media_id, category_id, author_id, author_name, status, published_at, seo_title, seo_description, related_festival_id, show_cover_in_body)
-		VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9::article_status, CASE WHEN $9='published' THEN now() ELSE NULL END, $10,$11,$12,$13) RETURNING id`
-	err := s.db.QueryRow(c.Request.Context(), q, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, u.ID, author, status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID, showCover).Scan(&id)
+	q := `INSERT INTO articles (title, slug, excerpt, content, cover_media_id, category_id, author_id, author_name, status, published_at, seo_title, seo_description, related_festival_id, show_cover_in_body, language)
+		VALUES ($1,$2,$3,$4::jsonb,$5,$6,$7,$8,$9::article_status, CASE WHEN $9='published' THEN now() ELSE NULL END, $10,$11,$12,$13,$14) RETURNING id`
+	err := s.db.QueryRow(c.Request.Context(), q, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, u.ID, author, status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID, showCover, lang).Scan(&id)
 	if err != nil {
 		httpx.BadRequest(c, "Failed to save article: "+err.Error())
 		return
 	}
+	
+	// Track media references created in this article
+	var affectedMedia []string
+	if in.CoverMediaID != nil && *in.CoverMediaID != "" {
+		affectedMedia = append(affectedMedia, *in.CoverMediaID)
+	}
+	affectedMedia = append(affectedMedia, medialifecycle.ExtractMediaIDsFromContent(in.Content)...)
+	_ = medialifecycle.ReevaluateMediaReferences(c.Request.Context(), s.db, affectedMedia)
+
 	s.audit(c.Request.Context(), u.ID, "ARTICLE_CREATED", "articles", id, in.Title)
 	httpx.Created(c, gin.H{"id": id, "slug": slug, "status": status})
 }
@@ -298,6 +318,15 @@ func (s *Server) adminCreateArticle(c *gin.Context) {
 func (s *Server) adminUpdateArticle(c *gin.Context) {
 	var in articleIn
 	if !bindJSON(c, &in) {
+		return
+	}
+
+	lang := strings.TrimSpace(strings.ToLower(in.Language))
+	if lang == "" {
+		lang = "en"
+	}
+	if lang != "en" && lang != "hi" && lang != "kok" {
+		httpx.BadRequest(c, "Invalid language. Allowed values are en, hi, kok.")
 		return
 	}
 
@@ -350,20 +379,56 @@ func (s *Server) adminUpdateArticle(c *gin.Context) {
 	if in.ShowCoverInBody != nil {
 		showCover = *in.ShowCoverInBody
 	}
+
+	// Fetch existing article cover and content to find removed media
+	var oldCover *string
+	var oldContent json.RawMessage
+	_ = s.db.QueryRow(c.Request.Context(), `SELECT cover_media_id, content FROM articles WHERE id=$1`, id).Scan(&oldCover, &oldContent)
+
 	_, err := s.db.Exec(c.Request.Context(), `UPDATE articles SET title=$2, slug=$3, excerpt=$4, content=$5::jsonb, cover_media_id=$6, category_id=$7, author_name=$8, status=$9::article_status,
-		seo_title=$10, seo_description=$11, related_festival_id=$12, show_cover_in_body=$13, updated_at=now() WHERE id=$1`,
-		id, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, firstNonEmpty(in.AuthorName, u.Name), status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID, showCover)
+		seo_title=$10, seo_description=$11, related_festival_id=$12, show_cover_in_body=$13, language=$14, updated_at=now() WHERE id=$1`,
+		id, in.Title, slug, in.Excerpt, in.Content, in.CoverMediaID, catID, firstNonEmpty(in.AuthorName, u.Name), status, in.SEOTitle, in.SEODescription, in.RelatedFestivalID, showCover, lang)
 	if err != nil {
 		httpx.BadRequest(c, "Failed to update article: "+err.Error())
 		return
 	}
+
+	// Calculate affected media IDs (both old and new references)
+	var affected []string
+	if oldCover != nil && *oldCover != "" {
+		affected = append(affected, *oldCover)
+	}
+	affected = append(affected, medialifecycle.ExtractMediaIDsFromContent(oldContent)...)
+
+	if in.CoverMediaID != nil && *in.CoverMediaID != "" {
+		affected = append(affected, *in.CoverMediaID)
+	}
+	affected = append(affected, medialifecycle.ExtractMediaIDsFromContent(in.Content)...)
+
+	_ = medialifecycle.ReevaluateMediaReferences(c.Request.Context(), s.db, affected)
+
 	s.audit(c.Request.Context(), u.ID, "ARTICLE_UPDATED", "articles", id, nil)
 	httpx.OK(c, gin.H{"id": id, "slug": slug, "status": status})
 }
 
 func (s *Server) adminDeleteArticle(c *gin.Context) {
-	_, _ = s.db.Exec(c.Request.Context(), `DELETE FROM articles WHERE id=$1`, c.Param("id"))
-	s.audit(c.Request.Context(), s.currentUser(c).ID, "ARTICLE_DELETED", "articles", c.Param("id"), nil)
+	id := c.Param("id")
+	// Fetch media IDs referenced by deleted article
+	var oldCover *string
+	var oldContent json.RawMessage
+	_ = s.db.QueryRow(c.Request.Context(), `SELECT cover_media_id, content FROM articles WHERE id=$1`, id).Scan(&oldCover, &oldContent)
+
+	_, _ = s.db.Exec(c.Request.Context(), `DELETE FROM articles WHERE id=$1`, id)
+
+	var affected []string
+	if oldCover != nil && *oldCover != "" {
+		affected = append(affected, *oldCover)
+	}
+	affected = append(affected, medialifecycle.ExtractMediaIDsFromContent(oldContent)...)
+
+	_ = medialifecycle.ReevaluateMediaReferences(c.Request.Context(), s.db, affected)
+
+	s.audit(c.Request.Context(), s.currentUser(c).ID, "ARTICLE_DELETED", "articles", id, nil)
 	httpx.OK(c, gin.H{"ok": true})
 }
 

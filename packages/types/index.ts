@@ -96,10 +96,20 @@ export type GalleryMediaItem = {
   caption?: string;
 };
 
+export type GalleryImageItem = {
+  mediaId: string;
+  url?: string;
+  thumb_url?: string;
+  alt?: string;
+  caption?: string;
+};
+
 export type GalleryBlock = {
   type: "gallery";
-  mediaIds: string[];
+  images?: GalleryImageItem[];
+  mediaIds?: string[];
   media?: GalleryMediaItem[];
+  caption?: string;
 };
 
 export type ArticleBlock =
@@ -122,6 +132,7 @@ export type Article = {
   cover_media_id?: string | null;
   category: string;
   category_slug: string;
+  language?: string;
   author: string;
   status: string;
   published_at?: string | null;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArticleBlock, GalleryMediaItem } from "@iskcon/types";
 import { MediaPickerModal, SelectedMedia } from "./MediaPickerModal";
+import { uploadFile } from "./SimpleList";
 
 interface BlockEditorProps {
   blocks: ArticleBlock[];
@@ -12,6 +13,7 @@ interface BlockEditorProps {
 export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
   const [activePickerIndex, setActivePickerIndex] = useState<number | null>(null);
   const [galleryPickerIndex, setGalleryPickerIndex] = useState<number | null>(null);
+  const [uploadingGalleryIndex, setUploadingGalleryIndex] = useState<number | null>(null);
 
   function updateBlock(index: number, updated: ArticleBlock) {
     const next = [...blocks];
@@ -42,7 +44,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
         newBlock = { type: "youtube", videoId: "", caption: "" };
         break;
       case "gallery":
-        newBlock = { type: "gallery", mediaIds: [], media: [] };
+        newBlock = { type: "gallery", images: [], mediaIds: [], media: [], caption: "" };
         break;
     }
 
@@ -88,13 +90,16 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
     } else if (galleryPickerIndex !== null) {
       const b = blocks[galleryPickerIndex];
       if (b.type === "gallery") {
-        const mediaIds = [...b.mediaIds, media.id];
+        const existingImages = b.images || (b.mediaIds || []).map((id) => ({ mediaId: id }));
+        const mediaIds = [...(b.mediaIds || []), media.id];
+        const images = [...existingImages, { mediaId: media.id, url: media.url, thumb_url: media.thumb_url || media.url }];
         const mediaList: GalleryMediaItem[] = [
           ...(b.media || []),
-          { id: media.id, url: media.url, thumb_url: media.thumb_url || media.url },
+          { id: media.id, url: media.url, thumb_url: media.thumb_url || media.url, alt: media.alt, caption: media.caption },
         ];
         updateBlock(galleryPickerIndex, {
           ...b,
+          images,
           mediaIds,
           media: mediaList,
         });
@@ -485,51 +490,196 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
                 {/* 7. GALLERY BLOCK */}
                 {block.type === "gallery" && (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-forest uppercase tracking-wider">
-                        Gallery Images ({block.mediaIds.length})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setGalleryPickerIndex(idx)}
-                        className="px-4 py-1.5 rounded-full bg-forest text-cream text-xs font-medium hover:bg-forest/90"
-                      >
-                        + Add Photo to Gallery
-                      </button>
+                    <div className="flex flex-wrap items-center justify-between gap-3 bg-cream/40 p-3 rounded-xl border border-gold/30">
+                      <div>
+                        <span className="text-xs font-semibold text-forest uppercase tracking-wider block">
+                          Gallery Images ({(block.images?.length || block.mediaIds?.length || 0)})
+                        </span>
+                        <span className="text-[11px] text-ink/60">
+                          Upload multiple photos directly or pick from the media library.
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer px-4 py-1.5 rounded-full bg-forest text-cream text-xs font-medium hover:bg-forest/90 shadow-sm transition inline-flex items-center gap-1.5">
+                          <span>{uploadingGalleryIndex === idx ? "Uploading..." : "📷 + Add / Upload Photos"}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            disabled={uploadingGalleryIndex === idx}
+                            onChange={async (e) => {
+                              const files = e.target.files;
+                              if (!files || files.length === 0) return;
+                              setUploadingGalleryIndex(idx);
+                              try {
+                                const newMediaItems: GalleryMediaItem[] = [];
+                                const newImages: { mediaId: string; url?: string; thumb_url?: string }[] = [];
+                                const newMediaIds: string[] = [];
+
+                                for (let i = 0; i < files.length; i++) {
+                                  const res = await uploadFile(files[i], "articles");
+                                  if (res.success && res.data?.id) {
+                                    const mId = res.data.id;
+                                    const u = res.data.url;
+                                    const tu = res.data.thumb_url || u;
+                                    newMediaIds.push(mId);
+                                    newImages.push({ mediaId: mId, url: u, thumb_url: tu });
+                                    newMediaItems.push({ id: mId, url: u, thumb_url: tu, alt: res.data.alt_text, caption: res.data.caption });
+                                  }
+                                }
+
+                                const existingImages = block.images || (block.mediaIds || []).map((id) => ({ mediaId: id }));
+                                const existingMediaIds = block.mediaIds || [];
+                                const existingMedia = block.media || [];
+
+                                updateBlock(idx, {
+                                  ...block,
+                                  images: [...existingImages, ...newImages],
+                                  mediaIds: [...existingMediaIds, ...newMediaIds],
+                                  media: [...existingMedia, ...newMediaItems],
+                                });
+                              } catch (err) {
+                                alert("Failed to upload some gallery photos. Please try again.");
+                              } finally {
+                                setUploadingGalleryIndex(null);
+                                e.target.value = "";
+                              }
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setGalleryPickerIndex(idx)}
+                          className="px-4 py-1.5 rounded-full bg-cream text-forest border border-gold/40 text-xs font-medium hover:bg-gold/20 shadow-sm transition"
+                        >
+                          🖼️ Pick from Library
+                        </button>
+                      </div>
                     </div>
 
-                    {block.mediaIds.length === 0 ? (
-                      <p className="text-xs text-ink/60 italic p-3 bg-cream/30 rounded-xl text-center">No images added to gallery yet.</p>
+                    {/* Gallery Items Grid */}
+                    {(!block.mediaIds || block.mediaIds.length === 0) && (!block.images || block.images.length === 0) ? (
+                      <div className="p-6 text-center border border-dashed border-gold/30 rounded-xl bg-cream/20">
+                        <p className="text-xs text-ink/60 italic">No images in this gallery yet. Click "+ Add / Upload Photos" above.</p>
+                      </div>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {block.mediaIds.map((mId, mIdx) => {
-                          const item = block.media?.find((m) => m.id === mId);
-                          return (
-                            <div key={mIdx} className="relative group rounded-xl overflow-hidden border border-gold/30 bg-white">
-                              {item?.url || item?.thumb_url ? (
-                                <img src={item.url || item.thumb_url} alt="" className="w-full h-24 object-cover" />
-                              ) : (
-                                <div className="w-full h-24 bg-cream flex items-center justify-center text-[10px] font-mono text-ink/60 truncate p-1">
-                                  {mId.slice(0, 8)}...
-                                </div>
-                              )}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                        {((block.media && block.media.length > 0)
+                          ? block.media
+                          : (block.images || []).map((img, i) => ({ id: img.mediaId, url: img.url, thumb_url: img.thumb_url }))
+                        ).map((item, mIdx) => (
+                          <div key={mIdx} className="relative group rounded-xl overflow-hidden border border-gold/30 bg-white shadow-sm">
+                            {item.url || item.thumb_url ? (
+                              <img src={item.url || item.thumb_url} alt="" className="w-full h-28 object-cover" />
+                            ) : (
+                              <div className="w-full h-28 bg-cream flex items-center justify-center text-[10px] font-mono text-ink/60 truncate p-1">
+                                {item.id?.slice(0, 8) || "Photo"}
+                              </div>
+                            )}
+
+                            {/* Reorder & Delete Overlay Controls */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-between px-2 py-1">
+                              <button
+                                type="button"
+                                disabled={mIdx === 0}
+                                onClick={() => {
+                                  if (mIdx === 0) return;
+                                  const curImages = [...(block.images || [])];
+                                  const curMediaIds = [...(block.mediaIds || [])];
+                                  const curMedia = [...(block.media || [])];
+
+                                  if (curImages.length > mIdx) {
+                                    const tmp = curImages[mIdx];
+                                    curImages[mIdx] = curImages[mIdx - 1];
+                                    curImages[mIdx - 1] = tmp;
+                                  }
+                                  if (curMediaIds.length > mIdx) {
+                                    const tmp = curMediaIds[mIdx];
+                                    curMediaIds[mIdx] = curMediaIds[mIdx - 1];
+                                    curMediaIds[mIdx - 1] = tmp;
+                                  }
+                                  if (curMedia.length > mIdx) {
+                                    const tmp = curMedia[mIdx];
+                                    curMedia[mIdx] = curMedia[mIdx - 1];
+                                    curMedia[mIdx - 1] = tmp;
+                                  }
+
+                                  updateBlock(idx, { ...block, images: curImages, mediaIds: curMediaIds, media: curMedia });
+                                }}
+                                className="bg-white/80 hover:bg-white text-forest p-1 rounded font-bold text-xs disabled:opacity-30"
+                                title="Move Left"
+                              >
+                                ◄
+                              </button>
+
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const nextIds = block.mediaIds.filter((_, i) => i !== mIdx);
+                                  const nextImages = block.images?.filter((_, i) => i !== mIdx);
+                                  const nextIds = block.mediaIds?.filter((_, i) => i !== mIdx);
                                   const nextMedia = block.media?.filter((_, i) => i !== mIdx);
-                                  updateBlock(idx, { ...block, mediaIds: nextIds, media: nextMedia });
+                                  updateBlock(idx, { ...block, images: nextImages, mediaIds: nextIds, media: nextMedia });
                                 }}
-                                className="absolute top-1 right-1 bg-red-800 text-white rounded-full p-1 text-[10px] leading-none shadow hover:bg-red-900"
-                                title="Remove photo"
+                                className="bg-red-700 text-white rounded-full p-1 text-xs hover:bg-red-800 shadow"
+                                title="Remove photo from gallery"
                               >
                                 ✕
                               </button>
+
+                              <button
+                                type="button"
+                                disabled={
+                                  mIdx ===
+                                  (block.media?.length || block.mediaIds?.length || block.images?.length || 1) - 1
+                                }
+                                onClick={() => {
+                                  const maxLen = (block.media?.length || block.mediaIds?.length || block.images?.length || 0);
+                                  if (mIdx >= maxLen - 1) return;
+                                  const curImages = [...(block.images || [])];
+                                  const curMediaIds = [...(block.mediaIds || [])];
+                                  const curMedia = [...(block.media || [])];
+
+                                  if (curImages.length > mIdx + 1) {
+                                    const tmp = curImages[mIdx];
+                                    curImages[mIdx] = curImages[mIdx + 1];
+                                    curImages[mIdx + 1] = tmp;
+                                  }
+                                  if (curMediaIds.length > mIdx + 1) {
+                                    const tmp = curMediaIds[mIdx];
+                                    curMediaIds[mIdx] = curMediaIds[mIdx + 1];
+                                    curMediaIds[mIdx + 1] = tmp;
+                                  }
+                                  if (curMedia.length > mIdx + 1) {
+                                    const tmp = curMedia[mIdx];
+                                    curMedia[mIdx] = curMedia[mIdx + 1];
+                                    curMedia[mIdx + 1] = tmp;
+                                  }
+
+                                  updateBlock(idx, { ...block, images: curImages, mediaIds: curMediaIds, media: curMedia });
+                                }}
+                                className="bg-white/80 hover:bg-white text-forest p-1 rounded font-bold text-xs disabled:opacity-30"
+                                title="Move Right"
+                              >
+                                ►
+                              </button>
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     )}
+
+                    {/* Gallery Caption Input */}
+                    <div>
+                      <label className="block text-xs font-semibold text-forest/80 mb-1">Gallery Caption / Title (Optional)</label>
+                      <input
+                        type="text"
+                        value={block.caption || ""}
+                        onChange={(e) => updateBlock(idx, { ...block, caption: e.target.value })}
+                        placeholder="e.g. Radhashtami celebrations at ISKCON Margao"
+                        className="w-full border border-gold/30 rounded-xl px-3.5 py-2 text-xs text-ink bg-white focus:border-forest"
+                      />
+                    </div>
                   </div>
                 )}
               </div>

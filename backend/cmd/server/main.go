@@ -14,6 +14,7 @@ import (
 	"github.com/iskcongoa/margao/internal/config"
 	"github.com/iskcongoa/margao/internal/db"
 	"github.com/iskcongoa/margao/internal/emailer"
+	"github.com/iskcongoa/margao/internal/medialifecycle"
 	"github.com/iskcongoa/margao/internal/payments"
 	"github.com/iskcongoa/margao/internal/seed"
 	"github.com/iskcongoa/margao/internal/storage"
@@ -61,6 +62,31 @@ func main() {
 	}
 
 	srv := api.New(cfg, pool, store, emailer.New(cfg.Email), pay)
+
+	// Run initial cleanup check on startup, then every 1 hour
+	go func() {
+		if count, err := medialifecycle.CleanupPendingMedia(ctx, pool, store); err != nil {
+			log.Printf("media cleanup error on startup: %v", err)
+		} else if count > 0 {
+			log.Printf("media cleanup: safely removed %d unreferenced media records on startup", count)
+		}
+
+		ticker := time.NewTicker(1 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if count, err := medialifecycle.CleanupPendingMedia(ctx, pool, store); err != nil {
+					log.Printf("media cleanup error: %v", err)
+				} else if count > 0 {
+					log.Printf("media cleanup: safely removed %d unreferenced media records", count)
+				}
+			}
+		}
+	}()
+
 	httpSrv := &http.Server{
 		Addr:              cfg.HTTPAddr,
 		Handler:           srv.Router(),

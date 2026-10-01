@@ -18,6 +18,7 @@ export default function Page() {
   // Form State
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("krishna-katha");
+  const [language, setLanguage] = useState("en");
   const [excerpt, setExcerpt] = useState("");
   const [blocks, setBlocks] = useState<ArticleBlock[]>([]);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
@@ -60,6 +61,7 @@ export default function Page() {
     setEditingId(article.id);
     setTitle(article.title || "");
     setCategory(article.category_slug || article.category || "krishna-katha");
+    setLanguage(article.language || "en");
     setExcerpt(article.excerpt || "");
 
     let blocksToSet: ArticleBlock[] = [];
@@ -88,6 +90,7 @@ export default function Page() {
     setEditingId(null);
     setTitle("");
     setCategory("krishna-katha");
+    setLanguage("en");
     setExcerpt("");
     setBlocks([]);
     setCoverMediaId(null);
@@ -114,6 +117,7 @@ export default function Page() {
         excerpt,
         content: blocks,
         category,
+        language,
         cover_media_id: coverMediaId,
         show_cover_in_body: showCoverInBody,
         status: statusToSet,
@@ -212,8 +216,8 @@ export default function Page() {
             </div>
           )}
 
-          {/* Title & Category */}
-          <div className="grid md:grid-cols-3 gap-4">
+          {/* Title, Category & Language */}
+          <div className="grid md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <label className="block text-xs font-medium uppercase tracking-wider text-forest/80 mb-1">
                 Article Title *
@@ -237,6 +241,21 @@ export default function Page() {
                 placeholder="e.g. krishna-katha, bhagavad-gita"
                 className="w-full border border-gold/30 rounded-xl px-4 py-2.5 bg-white text-ink text-sm focus:border-forest"
               />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium uppercase tracking-wider text-forest/80 mb-1">
+                Language
+              </label>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="w-full border border-gold/30 rounded-xl px-4 py-2.5 bg-white text-ink text-sm focus:border-forest cursor-pointer"
+              >
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="kok">Konkani</option>
+              </select>
             </div>
           </div>
 
@@ -384,7 +403,7 @@ export default function Page() {
                   )}
                   {b.type === "quote" && <blockquote className="border-l-4 border-gold pl-3 italic text-forest">"{b.text}"</blockquote>}
                   {b.type === "youtube" && <p className="text-xs font-mono">YouTube Video ID: {b.videoId}</p>}
-                  {b.type === "gallery" && <p className="text-xs text-ink/70">Gallery with {b.mediaIds.length} images</p>}
+                  {b.type === "gallery" && <p className="text-xs text-ink/70">Gallery with {b.images?.length || b.mediaIds?.length || 0} images</p>}
                 </div>
               ))
             )}
@@ -420,6 +439,9 @@ export default function Page() {
                       {a.status}
                     </span>
                     <span>· {a.category || "General"}</span>
+                    <span className="font-semibold uppercase text-[10px] tracking-wider text-saffron bg-saffron/10 px-1.5 py-0.5 rounded">
+                      {(a.language || "en").toUpperCase()}
+                    </span>
                     <span>· {a.slug}</span>
                   </p>
                 </div>

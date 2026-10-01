@@ -206,17 +206,33 @@ func ValidateArticleContent(ctx context.Context, db *pgxpool.Pool, raw json.RawM
 		case "gallery":
 			var b struct {
 				MediaIDs []string `json:"mediaIds"`
+				Images   []struct {
+					MediaID string `json:"mediaId"`
+				} `json:"images"`
+				Caption string `json:"caption"`
 			}
 			if err := json.Unmarshal(item, &b); err != nil {
 				return fmt.Errorf("malformed gallery block at position %d", i)
 			}
-			if len(b.MediaIDs) == 0 {
-				return fmt.Errorf("gallery block at position %d must contain at least one mediaId", i)
+			var ids []string
+			if len(b.MediaIDs) > 0 {
+				ids = append(ids, b.MediaIDs...)
 			}
-			if len(b.MediaIDs) > 30 {
-				return fmt.Errorf("gallery block at position %d exceeds maximum limit of 30 images", i)
+			for _, img := range b.Images {
+				if img.MediaID != "" {
+					ids = append(ids, img.MediaID)
+				}
 			}
-			for _, id := range b.MediaIDs {
+			if len(ids) == 0 {
+				return fmt.Errorf("gallery block at position %d must contain at least one image or mediaId", i)
+			}
+			if len(ids) > 50 {
+				return fmt.Errorf("gallery block at position %d exceeds maximum limit of 50 images", i)
+			}
+			if len(b.Caption) > 1000 {
+				return fmt.Errorf("gallery block at position %d caption exceeds maximum length of 1,000 characters", i)
+			}
+			for _, id := range ids {
 				if _, err := uuid.Parse(id); err != nil {
 					return fmt.Errorf("invalid mediaId '%s' in gallery block at position %d", id, i)
 				}
@@ -270,6 +286,15 @@ func HydrateArticleMedia(ctx context.Context, db *pgxpool.Pool, mediaURLFunc fun
 				for _, item := range mIDs {
 					if mID, ok := item.(string); ok && mID != "" {
 						mediaIDSet[mID] = true
+					}
+				}
+			}
+			if imgs, ok := b["images"].([]any); ok {
+				for _, item := range imgs {
+					if obj, ok := item.(map[string]any); ok {
+						if mID, ok := obj["mediaId"].(string); ok && mID != "" {
+							mediaIDSet[mID] = true
+						}
 					}
 				}
 			}
@@ -330,23 +355,40 @@ func HydrateArticleMedia(ctx context.Context, db *pgxpool.Pool, mediaURLFunc fun
 				}
 			}
 		} else if t == "gallery" {
+			var mediaItems []map[string]any
+
+			// Collect IDs from mediaIds or images array
+			var targetIDs []string
 			if mIDs, ok := b["mediaIds"].([]any); ok {
-				var items []map[string]any
 				for _, item := range mIDs {
 					if mID, ok := item.(string); ok {
-						if rec, found := mediaMap[mID]; found {
-							items = append(items, map[string]any{
-								"id":        rec.ID,
-								"url":       rec.URL,
-								"thumb_url": rec.ThumbURL,
-								"alt":       rec.Alt,
-								"caption":   rec.Caption,
-							})
+						targetIDs = append(targetIDs, mID)
+					}
+				}
+			}
+			if imgs, ok := b["images"].([]any); ok {
+				for _, item := range imgs {
+					if obj, ok := item.(map[string]any); ok {
+						if mID, ok := obj["mediaId"].(string); ok {
+							targetIDs = append(targetIDs, mID)
 						}
 					}
 				}
-				blockList[i]["media"] = items
 			}
+
+			for _, mID := range targetIDs {
+				if rec, found := mediaMap[mID]; found {
+					mediaItems = append(mediaItems, map[string]any{
+						"id":        rec.ID,
+						"mediaId":   rec.ID,
+						"url":       rec.URL,
+						"thumb_url": rec.ThumbURL,
+						"alt":       rec.Alt,
+						"caption":   rec.Caption,
+					})
+				}
+			}
+			blockList[i]["media"] = mediaItems
 		}
 	}
 

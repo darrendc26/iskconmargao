@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iskcongoa/margao/internal/httpx"
 	"github.com/iskcongoa/margao/internal/imagingx"
+	"github.com/iskcongoa/margao/internal/medialifecycle"
 	"github.com/iskcongoa/margao/internal/middleware"
 )
 
@@ -76,6 +77,10 @@ func (s *Server) uploadMedia(c *gin.Context) {
 		VALUES ('image',$1,$2,$3,$4,NULL,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
 		origKey, origKey, thumbKey, origKey, res.MIME, len(res.OriginalBytes), res.Width, res.Height, alt, caption, folder, uid).Scan(&mediaID)
 	if err != nil {
+		// Clean up uploaded R2 objects on database insert failure
+		for _, u := range uploads {
+			_ = s.store.Delete(ctx, u.key)
+		}
 		httpx.Server(c, "")
 		return
 	}
@@ -100,6 +105,18 @@ func (s *Server) deleteMedia(c *gin.Context) {
 		Scan(&orig, &webp, &thumb, &med, &large)
 	if err != nil {
 		httpx.NotFound(c, "Media not found.")
+		return
+	}
+
+	// Check if media is referenced anywhere
+	refs, err := medialifecycle.CountReferences(c.Request.Context(), s.db, []string{id})
+	if err != nil {
+		httpx.Server(c, "Failed to verify media references.")
+		return
+	}
+
+	if refs[id] > 0 {
+		httpx.BadRequest(c, fmt.Sprintf("Cannot delete media: it is currently referenced in %d place(s).", refs[id]))
 		return
 	}
 

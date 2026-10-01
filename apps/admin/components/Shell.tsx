@@ -22,7 +22,6 @@ const nav: NavItem[] = [
   { href: "/programs", label: "Programs" },
   { href: "/announcements", label: "Announcements" },
   { group: "Media" },
-  { href: "/albums", label: "Photo Albums" },
   { href: "/videos", label: "Videos" },
   { group: "Community" },
   { href: "/volunteers", label: "Volunteers" },
@@ -43,6 +42,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passMsg, setPassMsg] = useState("");
 
   useEffect(() => {
     api<{ user: User }>("/api/v1/admin/me").then((r) => {
@@ -126,7 +130,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
 
-        <div className="pt-6 mt-6 border-t border-gold/20">
+        <div className="pt-6 mt-6 border-t border-gold/20 flex items-center justify-between">
+          <button
+            className="text-xs text-gold hover:text-white underline"
+            onClick={() => setPasswordModalOpen(true)}
+          >
+            Change Password
+          </button>
           <button
             className="text-xs underline text-gold hover:text-white"
             onClick={async () => {
@@ -138,6 +148,106 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </aside>
+
+      {/* Change Password Modal */}
+      {passwordModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md border border-gold/30 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gold/20 pb-3">
+              <h2 className="font-serif text-xl font-bold text-forest">Change Password</h2>
+              <button
+                onClick={() => {
+                  setPasswordModalOpen(false);
+                  setPassMsg("");
+                }}
+                className="text-gray-400 hover:text-gray-700 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setPassMsg("");
+                if (newPassword !== confirmPassword) {
+                  setPassMsg("New passwords do not match.");
+                  return;
+                }
+                const res = await api("/api/v1/admin/auth/change-password", {
+                  method: "POST",
+                  body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                  }),
+                });
+                if (res.ok) {
+                  setPassMsg("Password updated successfully!");
+                  setCurrentPassword("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setTimeout(() => setPasswordModalOpen(false), 1500);
+                } else {
+                  setPassMsg(res.error || "Failed to update password.");
+                }
+              }}
+              className="mt-4 space-y-4 text-xs"
+            >
+              <label className="block font-medium text-forest">
+                Current Password *
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="mt-1 w-full border border-gold/30 rounded-xl px-3 py-2 text-sm bg-white"
+                />
+              </label>
+              <label className="block font-medium text-forest">
+                New Password (min 10 characters) *
+                <input
+                  type="password"
+                  required
+                  minLength={10}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="mt-1 w-full border border-gold/30 rounded-xl px-3 py-2 text-sm bg-white"
+                />
+              </label>
+              <label className="block font-medium text-forest">
+                Confirm New Password *
+                <input
+                  type="password"
+                  required
+                  minLength={10}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="mt-1 w-full border border-gold/30 rounded-xl px-3 py-2 text-sm bg-white"
+                />
+              </label>
+              {passMsg && (
+                <p className={`text-xs font-semibold ${passMsg.includes("success") ? "text-green-700" : "text-red-700"}`}>
+                  {passMsg}
+                </p>
+              )}
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPasswordModalOpen(false)}
+                  className="px-4 py-2 rounded-full border border-gray-300 text-gray-700 font-medium hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-full bg-forest text-cream font-medium hover:bg-forest/90 shadow"
+                >
+                  Update Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Viewport */}
       <main className="p-4 sm:p-6 md:p-10 max-w-full overflow-x-hidden">{children}</main>
