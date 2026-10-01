@@ -80,7 +80,7 @@ button[class*="btn"] {
   margin-bottom: 1rem;
   line-height: 1.8;
 }
-.prose-devotional a {
+.prose-devotional a:not(.not-prose a):not(.rounded-full) {
   color: #2f5a47;
   text-decoration: underline;
 }
