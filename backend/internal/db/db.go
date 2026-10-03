@@ -18,8 +18,8 @@ func Connect(ctx context.Context, url string) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 	cfg.ConnConfig.RuntimeParams["client_encoding"] = "UTF8"
-	cfg.MaxConns = 25
-	cfg.MinConns = 2
+	cfg.MaxConns = 10
+	cfg.MinConns = 1
 	cfg.MaxConnIdleTime = 5 * time.Minute
 	cfg.MaxConnLifetime = 30 * time.Minute
 	cfg.HealthCheckPeriod = 1 * time.Minute
